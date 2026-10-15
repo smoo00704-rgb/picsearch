@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>ค้นรูปสินค้า</title>
+    <meta name="description" content="ค้นรูปสินค้าด้วยรหัส AMOS / AS400 จากไฟล์ลิงก์ที่เก็บไว้ในเครื่อง" />
+    <meta name="theme-color" content="#6a5cf5" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/icon-192.png" />
+    <!-- iOS: ติดตั้งลงหน้าโฮม -->
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ค้นรูป" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!--
+      PicSearch App v2.0 (PWA) - แยกจาก PicSearch v1.7
+      - ติดตั้งเป็นแอปบนมือถือได้ (Android: ปุ่ม "ติดตั้งแอป" / iOS: แชร์ -> เพิ่มไปยังหน้าจอโฮม)
+      - เก็บข้อมูลไฟล์ลิงก์ไว้ในเครื่อง (IndexedDB + ขอ persistent storage) เลือกไฟล์ครั้งเดียว เปิดครั้งต่อไปค้นได้ทันที
+      - ใช้งานออฟไลน์ได้ (service worker แคชตัวแอป) - ต้องมีเน็ตเฉพาะตอนโหลดรูป
+      - อ่าน .xlsx ด้วย DecompressionStream ของเบราว์เซอร์ (core.js) ไม่พึ่ง CDN
+      - หลักการค้นเหมือน v1.7: คอลัมน์ A -> คอลัมน์ C -> ลิงก์จากคอลัมน์ B, ชีต Sheet0 (ไม่มีใช้ชีตแรก)
+    -->
+    <style>
+      :root {
+        --bg: #f3f2fb; --panel: #fff; --panel2: #f7f6fd; --border: #e4e1f7;
+        --text: #2b2a3d; --muted: #7d7b9c; --accent: #6a5cf5; --accent-soft: #efeafe;
+        --good: #1a9e63; --warn: #c97710; --bad: #d63d34;
+        --mono: ui-monospace, "SFMono-Regular", Consolas, Menlo, monospace;
+        --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html, body { margin: 0; background: var(--bg); color: var(--text); }
+      body {
+        line-height: 1.5; min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Thai", "Sukhumvit Set", sans-serif;
+        padding-bottom: calc(16px + var(--safe-bottom));
+      }
+      .topbar {
+        position: sticky; top: 0; z-index: 10;
+        background: linear-gradient(90deg, #6a5cf5, #8b7bfb); color: #fff;
+        padding: calc(12px + var(--safe-top)) 16px 12px;
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        box-shadow: 0 2px 10px rgba(106, 92, 245, .25);
+      }
+      .topbar .title { font-size: 1.05rem; font-weight: 700; }
+      .iconbtn {
+        background: rgba(255,255,255,.18); color: #fff; border: 0; border-radius: 999px;
+        padding: 6px 12px; font: inherit; font-size: .8rem; cursor: pointer;
+      }
+      .wrap { max-width: 640px; margin: 0 auto; padding: 12px; }
+      .card {
+        background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+        padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(43,42,61,.04);
+      }
+      .card h2 { font-size: .98rem; margin: 0 0 4px; color: #3a3760; }
+      .hint { color: var(--muted); font-size: .84rem; margin: 2px 0 10px; }
+      button.btn {
+        background: var(--accent); color: #fff; border: none; border-radius: 999px; padding: 12px 20px;
+        font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(106,92,245,.3);
+      }
+      button.btn:disabled { opacity: .35; box-shadow: none; cursor: not-allowed; }
+      button.btn.secondary { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
+      button.btn.block { width: 100%; }
+      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .status { font-size: .84rem; color: var(--muted); margin-top: 8px; word-break: break-word; }
+      .status.ok { color: var(--good); } .status.warn { color: var(--warn); } .status.bad { color: var(--bad); }
+
+      .searchbox { display: flex; gap: 8px; }
+      .searchbox input {
+        flex: 1; min-width: 0; font-size: 1.25rem; padding: 12px 14px; border-radius: 12px;
+        border: 2px solid var(--border); font-family: var(--mono); background: #fff; color: var(--text);
+      }
+      .searchbox input:focus { outline: none; border-color: var(--accent); }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      .chip {
+        background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px;
+        font-size: .8rem; font-family: var(--mono); cursor: pointer; color: var(--text);
+      }
+      .chip.nf { color: var(--bad); }
+
+      .result-empty { color: var(--muted); text-align: center; padding: 40px 10px; }
+      .result-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+      .src { padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+      .src.found { background: #e3f7ee; color: var(--good); }
+      .src.none { background: #fde8e7; color: var(--bad); }
+      .imgbox {
+        margin-top: 10px; background: #fff; border: 1px solid var(--border); border-radius: 12px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+        min-height: 220px; padding: 10px;
+      }
+      .imgbox img {
+        max-width: 100%; max-height: 60vh; object-fit: contain;
+        -webkit-touch-callout: default; /* iOS: ให้กดค้างแล้วมีเมนูบันทึกรูป */
+      }
+      .imglabel { font-family: var(--mono); font-weight: 700; font-size: 1.1rem; text-align: center; word-break: break-all; }
+      .thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+      .thumbs img {
+        width: 64px; height: 64px; object-fit: contain; border: 2px solid var(--border); border-radius: 8px; background: #fff;
+      }
+      .thumbs img.active { border-color: var(--accent); }
+      .tip { font-size: .84rem; color: var(--muted); margin-top: 10px; }
+      .url { font-size: .72rem; color: var(--muted); word-break: break-all; margin-top: 6px; }
+      details.steps { margin-top: 10px; font-size: .78rem; }
+      details.steps summary { color: var(--muted); cursor: pointer; }
+      details.steps div.box {
+        margin-top: 6px; font-family: var(--mono); background: var(--panel2); border-radius: 10px;
+        padding: 8px 10px; white-space: pre-wrap; word-break: break-all;
+      }
+      .g { color: var(--good); } .w { color: var(--warn); }
+
+      .progress { height: 6px; background: var(--accent-soft); border-radius: 999px; overflow: hidden; margin-top: 10px; display: none; }
+      .progress > div { height: 100%; width: 30%; background: var(--accent); border-radius: 999px; animation: slide 1.1s ease-in-out infinite; }
+      @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(340%); } }
+      .spinner {
+        display: inline-block; width: 14px; height: 14px; border: 2px solid var(--accent-soft);
+        border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      .banner {
+        background: #fff7e8; border: 1px solid #f5d9a8; color: #7a4d06; border-radius: 12px;
+        padding: 10px 12px; font-size: .86rem; margin-bottom: 12px;
+      }
+      .banner b { color: #5c3a04; }
+      .toast {
+        position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + var(--safe-bottom));
+        background: #2b2a3d; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: .86rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,.25); z-index: 50; display: none; max-width: 92vw; text-align: center;
+      }
+      .meta { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: .84rem; margin: 6px 0 10px; }
+      .meta dt { color: var(--muted); } .meta dd { margin: 0; word-break: break-all; }
+      .hidden { display: none !important; }
+      .ver { text-align: center; color: var(--muted); font-size: .72rem; margin-top: 4px; }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="title">🔍 ค้นรูปสินค้า</div>
+      <div class="row">
+        <button class="iconbtn hidden" id="btn-install">⬇ ติดตั้งแอป</button>
+        <button class="iconbtn" id="btn-settings" title="ไฟล์ลิงก์">📄 ไฟล์ลิงก์</button>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <!-- iOS: วิธีติดตั้ง (แสดงเมื่อเปิดใน Safari ยังไม่ได้ติดตั้ง) -->
+      <div class="banner hidden" id="ios-install">
+        📲 <b>ติดตั้งเป็นแอป:</b> แตะปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรขึ้น) แล้วเลือก <b>“เพิ่มไปยังหน้าจอโฮม”</b>
+        — เปิดจากไอคอนบนหน้าโฮมแล้ว ข้อมูลไฟล์ลิงก์จะไม่ถูก Safari ลบอัตโนมัติ
+        <div style="text-align: right; margin-top: 4px"><button class="btn secondary" id="ios-install-close" style="padding: 6px 14px; font-size: .8rem">ปิด</button></div>
+      </div>
+      <div class="banner hidden" id="unsupported"></div>
+
+      <!-- ตั้งค่าครั้งแรก / อัปเดตไฟล์ลิงก์ -->
+      <div class="card hidden" id="setup">
+        <h2 id="setup-title">📄 เริ่มใช้งาน: เลือกไฟล์ลิงก์รูป</h2>
+        <p class="hint" id="setup-hint">
+          เลือกไฟล์ Excel ลิงก์รูป (.xlsx) จาก OneDrive / ไฟล์ในเครื่อง <b>ครั้งเดียว</b> แอปจะเก็บข้อมูลไว้ในเครื่อง
+          ครั้งต่อไปเปิดแอปค้นได้ทันที (ไม่ต้องมีเน็ตตอนค้น) — เมื่อมีไฟล์ลิงก์ใหม่ ค่อยกด “อัปเดตไฟล์ลิงก์”
+        </p>
+        <dl class="meta hidden" id="meta"></dl>
+        <div class="row">
+          <button class="btn" id="btn-pick">📄 เลือกไฟล์ลิงก์ (.xlsx)</button>
+          <button class="btn secondary hidden" id="btn-close-setup">กลับไปค้นหา</button>
+        </div>
+        <input type="file" id="f-link" class="hidden"
+          />
+        <!-- v2.1: ไม่ใส่ accept - บาง Android/OneDrive รายงานชนิดไฟล์ไม่ตรง ทำให้ไฟล์ .xlsx เป็นสีเทาเลือกไม่ได้ ; ตรวจชนิดไฟล์ในโค้ดแทน -->
+        <div class="progress" id="progress"><div></div></div>
+        <div class="status" id="setup-status"></div>
+        <div class="row hidden" id="danger-zone" style="margin-top: 14px; justify-content: flex-end">
+          <button class="btn secondary" id="btn-clear" style="padding: 6px 14px; font-size: .8rem">🗑 ลบข้อมูลไฟล์ลิงก์ในเครื่อง</button>
+        </div>
+      </div>
+
+      <!-- ค้นหา -->
+      <div class="card" id="search-card">
+        <div class="searchbox">
+          <input id="code" type="search" inputmode="numeric" enterkeyhint="search" autocomplete="off"
+            autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="รหัส AMOS / AS400" disabled />
+          <button class="btn" id="btn-search" disabled>ค้นหา</button>
+        </div>
+        <div class="status" id="search-status"></div>
+        <div class="chips" id="history"></div>
+      </div>
+
+      <div class="card hidden" id="result"></div>
+      <details class="card" id="diag-card">
+        <summary style="cursor: pointer; color: var(--muted); font-size: .86rem">🛠 ข้อมูลสำหรับแจ้งปัญหา</summary>
+        <div class="hint" style="margin-top: 8px">ถ้าใช้งานไม่ได้ กด “คัดลอก” แล้วส่งข้อความนี้ (หรือแคปหน้าจอ) ให้ผู้ดูแลโปรแกรม</div>
+        <pre id="diag" style="font-family: var(--mono); font-size: .72rem; background: var(--panel2); border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-all; margin: 0 0 8px; user-select: text; -webkit-user-select: text"></pre>
+        <button class="btn secondary" id="btn-copy-diag" style="padding: 6px 14px; font-size: .8rem">📋 คัดลอก</button>
+      </details>
+      <div class="ver" id="ver">PicSearch App v2.1</div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+/*CORE-START*/
+/* PicSearch core (ใช้ได้ทั้งเบราว์เซอร์และ Node สำหรับทดสอบ)
+ * - ZIP/XLSX reader ด้วย DecompressionStream("deflate-raw") ของเบราว์เซอร์ ไม่ต้องใช้ไลบรารี (fflate) จาก CDN
+ *   รองรับ: Chrome/Edge 103+, Safari/iOS 16.4+, Firefox 113+
+ * - อ่านชีตแบบ stream ทีละ chunk (ไฟล์ลิงก์ใหญ่ ไม่โหลด XML ทั้งก้อนเข้าหน่วยความจำ)
+ * - หลักการค้นเหมือน PicSearch v1.7 ทุกขั้น (A -> C -> ลิงก์จาก B, lookupKeys, ป้ายรหัส)
+ */
+(function (root) {
+  "use strict";
+
+  // ---------------- helpers ----------------
+  function normalizeKey(v) {
+    const s = v === null || v === undefined ? "" : String(v).trim();
+    const m = s.match(/^(-?\d+)\.0+$/);
+    return m ? m[1] : s;
+  }
+  const ENT = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+  function decodeEntities(str) {
+    if (!str || str.indexOf("&") === -1) return str;
+    return str.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (m, e) => {
+      if (e[0] === "#") return String.fromCodePoint(e[1] === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10));
+      return ENT[e];
+    });
+  }
+
+  function supportsNativeUnzip() {
+    try { new DecompressionStream("deflate-raw"); return true; } catch (e) { return false; }
+  }
+
+  // ---------------- ZIP (อ่านจาก Central Directory - ถูกต้องแม้ local header ใช้ data descriptor) ----------------
+  async function openZip(file) {
+    const tailLen = Math.min(file.size, 22 + 65535);
+    const tail = new DataView(await file.slice(file.size - tailLen).arrayBuffer());
+    let eocd = -1;
+    for (let i = tailLen - 22; i >= 0; i--) if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error("ไม่ใช่ไฟล์ .xlsx (ไม่พบโครงสร้าง ZIP)");
+    const cdSize = tail.getUint32(eocd + 12, true), cdOffset = tail.getUint32(eocd + 16, true);
+    if (cdOffset === 0xffffffff || cdSize === 0xffffffff) throw new Error("ไฟล์ใหญ่เกิน 4GB (ZIP64) ไม่รองรับ");
+    const cd = new DataView(await file.slice(cdOffset, cdOffset + cdSize).arrayBuffer());
+    const dec = new TextDecoder("utf-8");
+    const entries = new Map();
+    let p = 0;
+    while (p + 46 <= cd.byteLength && cd.getUint32(p, true) === 0x02014b50) {
+      const method = cd.getUint16(p + 10, true);
+      const compSize = cd.getUint32(p + 20, true);
+      const nameLen = cd.getUint16(p + 28, true), extraLen = cd.getUint16(p + 30, true), cmtLen = cd.getUint16(p + 32, true);
+      const localOffset = cd.getUint32(p + 42, true);
+      const name = dec.decode(new Uint8Array(cd.buffer, cd.byteOffset + p + 46, nameLen));
+      entries.set(name, { method, compSize, localOffset });
+      p += 46 + nameLen + extraLen + cmtLen;
+    }
+    return { file, entries };
+  }
+
+  async function entryTextStream(zip, name) {
+    const e = zip.entries.get(name);
+    if (!e) return null;
+    const lh = new DataView(await zip.file.slice(e.localOffset, e.localOffset + 30).arrayBuffer());
+    if (lh.getUint32(0, true) !== 0x04034b50) throw new Error("ไฟล์เสีย (local header ของ " + name + ")");
+    const start = e.localOffset + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+    let s = zip.file.slice(start, start + e.compSize).stream();
+    if (e.method === 8) s = s.pipeThrough(new DecompressionStream("deflate-raw"));
+    else if (e.method !== 0) throw new Error("รูปแบบบีบอัดไม่รองรับ (method " + e.method + ")");
+    return s.pipeThrough(new TextDecoderStream("utf-8"));
+  }
+
+  async function readEntryText(zip, name) {
+    const s = await entryTextStream(zip, name);
+    if (!s) return "";
+    const reader = s.getReader();
+    let out = "";
+    for (;;) { const { done, value } = await reader.read(); if (done) break; out += value; }
+    return out;
+  }
+
+  // ---------------- XLSX ----------------
+  function sheetList(wbXml) {
+    // คืน [{name, rid}] ตามลำดับในไฟล์ (ลำดับ attribute ใน <sheet> ไม่แน่นอน)
+    const out = [];
+    for (const m of wbXml.matchAll(/<sheet\b[^>]*\/?>/g)) {
+      const tag = m[0];
+      const nm = /\bname="([^"]*)"/.exec(tag), rid = /\br:id="([^"]*)"/.exec(tag);
+      if (nm) out.push({ name: decodeEntities(nm[1]), rid: rid ? rid[1] : null });
+    }
+    return out;
+  }
+  function resolveSheetPath(sheets, relsXml, sheetName) {
+    const relMap = {};
+    for (const m of relsXml.matchAll(/<Relationship\b[^>]*\/?>/g)) {
+      const id = /\bId="([^"]*)"/.exec(m[0]), tg = /\bTarget="([^"]*)"/.exec(m[0]);
+      if (id && tg) relMap[id[1]] = tg[1];
+    }
+    const s = sheets.find((x) => x.name === sheetName) || sheets[0];
+    let target = (s && relMap[s.rid]) || "worksheets/sheet1.xml";
+    if (target.startsWith("/")) target = target.slice(1);           // absolute "/xl/worksheets/..."
+    else target = target.replace(/^\.?\//, "");
+    if (!target.startsWith("xl/")) target = "xl/" + target;
+    return target;
+  }
+  function parseSharedStrings(xml) {
+    if (!xml) return [];
+    const result = [], siRe = /<si>([\s\S]*?)<\/si>/g, tRe = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+    let m;
+    while ((m = siRe.exec(xml))) {
+      let txt = "", tm;
+      tRe.lastIndex = 0;
+      while ((tm = tRe.exec(m[1]))) txt += tm[1];
+      result.push(decodeEntities(txt));
+    }
+    return result;
+  }
+  // รองรับทั้ง <c r="A1" ...> และ <c ... r="A1"> (บางโปรแกรมสลับลำดับ attribute)
+  const CELL_RE = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  const R_RE = /\br="([A-Z]+)\d+"/, T_RE = /\bt="([a-zA-Z]+)"/, V_RE = /<v>([\s\S]*?)<\/v>/, IS_T_RE = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+  function parseRowCells(rowText, wantedCols, shared) {
+    const row = {};
+    CELL_RE.lastIndex = 0;
+    let m;
+    while ((m = CELL_RE.exec(rowText))) {
+      const rm = R_RE.exec(m[1]);
+      if (!rm) continue;
+      const col = rm[1];
+      if (wantedCols && !wantedCols.has(col)) continue;
+      const inner = m[2];
+      if (inner == null) { row[col] = null; continue; }
+      const tm = T_RE.exec(m[1]);
+      const ctype = tm ? tm[1] : null;
+      let val = null;
+      if (ctype === "inlineStr") {
+        let txt = "", t2; IS_T_RE.lastIndex = 0;
+        while ((t2 = IS_T_RE.exec(inner))) txt += t2[1];
+        val = decodeEntities(txt);
+      } else {
+        const vm = V_RE.exec(inner);
+        if (vm) {
+          if (ctype === "s") { const i = parseInt(vm[1], 10); val = shared[i] !== undefined ? shared[i] : ""; }
+          else val = decodeEntities(vm[1]);
+        }
+      }
+      row[col] = val;
+    }
+    return row;
+  }
+
+  async function getSheetNames(zip) {
+    return sheetList(await readEntryText(zip, "xl/workbook.xml")).map((s) => s.name);
+  }
+
+  // อ่านไฟล์ลิงก์ -> rows: [{a, b, c}] เฉพาะแถวที่ B ไม่ว่าง (เหมือน v1.7)
+  // v2.1: error ทุกตัวติดชื่อขั้นตอนที่ล้ม เช่น "[อ่านชีต] ..." เพื่อหาสาเหตุจากหน้าจอผู้ใช้ได้ตรง
+  async function readLinkFile(file, onProgress) {
+    let stage = "ตรวจเบราว์เซอร์";
+    try { return await readLinkFileInner(file, onProgress, (s) => (stage = s)); }
+    catch (e) {
+      const err = new Error("[" + stage + "] " + (e && e.message ? e.message : String(e)));
+      err.stage = stage; err.cause = e; err.stack = (e && e.stack) || err.stack;
+      throw err;
+    }
+  }
+  async function readLinkFileInner(file, onProgress, setStage) {
+    if (!supportsNativeUnzip()) throw new Error("เบราว์เซอร์นี้เก่าเกินไป (ต้องเป็น iOS 16.4+ / Chrome 103+)");
+    if (typeof TextDecoderStream === "undefined") throw new Error("เบราว์เซอร์ไม่มี TextDecoderStream");
+    setStage("เปิดไฟล์ ZIP");
+    const zip = await openZip(file);
+    setStage("อ่าน workbook.xml");
+    const wbXml = await readEntryText(zip, "xl/workbook.xml");
+    if (!wbXml) throw new Error("ไม่พบ workbook ในไฟล์ (ใช่ไฟล์ .xlsx ไหม)");
+    const sheets = sheetList(wbXml);
+    if (!sheets.length) throw new Error("ไม่พบชีตในไฟล์");
+    const sheetName = sheets.some((s) => s.name === "Sheet0") ? "Sheet0" : sheets[0].name;
+    setStage("หาตำแหน่งชีต " + sheetName);
+    const sheetPath = resolveSheetPath(sheets, await readEntryText(zip, "xl/_rels/workbook.xml.rels"), sheetName);
+    setStage("อ่าน sharedStrings");
+    const shared = parseSharedStrings(await readEntryText(zip, "xl/sharedStrings.xml"));
+    setStage("อ่านชีต " + sheetName + " (" + sheetPath + ")");
+    const stream = await entryTextStream(zip, sheetPath);
+    if (!stream) throw new Error("ไม่พบข้อมูลชีต " + sheetPath + " ในไฟล์ (มี: " + [...zip.entries.keys()].filter((n) => n.includes("worksheets")).join(", ") + ")");
+
+    const wanted = new Set(["A", "B", "C"]);
+    const rows = [];
+    let buf = "", rowNum = 0, lastUi = 0;
+    const reader = stream.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (value) buf += value;
+      for (;;) {
+        const s = buf.indexOf("<row");
+        if (s === -1) { if (buf.length > 1048576) buf = buf.slice(-64); break; }
+        // "<row" ต้องตามด้วยช่องว่างหรือ ">" (กันชนกับ <rowBreaks> ฯลฯ)
+        const ch = buf.charAt(s + 4);
+        if (ch && ch !== " " && ch !== ">") { buf = buf.slice(s + 4); continue; }
+        // แถวว่างแบบ <row r="5"/> ไม่มี </row>
+        const gt = buf.indexOf(">", s);
+        if (gt === -1) { buf = buf.slice(s); break; }
+        if (buf.charAt(gt - 1) === "/") { buf = buf.slice(gt + 1); rowNum++; continue; }
+        const e = buf.indexOf("</row>", gt);
+        if (e === -1) { buf = buf.slice(s); break; }
+        const rowText = buf.slice(gt + 1, e);
+        buf = buf.slice(e + 6);
+        rowNum++;
+        const r = parseRowCells(rowText, wanted, shared);
+        const b = r.B != null ? String(r.B).trim() : "";
+        if (b) rows.push({ a: normalizeKey(r.A), b, c: normalizeKey(r.C) });
+        if (onProgress && rowNum - lastUi >= 20000) { lastUi = rowNum; await onProgress(rowNum); }
+      }
+      if (done) break;
+    }
+    return { rows, sheetName, totalRows: rowNum };
+  }
+
+  // ---------------- lookup (เหมือน v1.7) ----------------
+  // รหัสซ้ำหลายแถว ใช้แถวบนสุดที่มีลิงก์
+  function buildMaps(rows) {
+    const A = new Map(), C = new Map();
+    for (const rec of rows) {
+      if (rec.a && !A.has(rec.a)) A.set(rec.a, rec);
+      if (rec.c && !C.has(rec.c)) C.set(rec.c, rec);
+    }
+    return { A, C };
+  }
+  //   คอลัมน์ A: รหัสตรงตามที่พิมพ์ ; รหัส 9 หลัก (AMOS) ลอง 6หลักแรก+"_0" ; รหัส 6 หลัก ลอง รหัส+"_0"
+  //   คอลัมน์ C: รหัสตรงตามที่พิมพ์เท่านั้น
+  function lookupKeys(code, col) {
+    const keys = [code];
+    if (col === "A") {
+      if (code.length === 9) keys.push(code.slice(0, 6) + "_0");
+      else if (code.length === 6) keys.push(code + "_0");
+    }
+    return [...new Set(keys)];
+  }
+  function cleanCode(raw) { return normalizeKey(raw).replace(/\s+/g, ""); }
+  // คืน { col, key, images, label } หรือ null
+  function search(maps, code) {
+    for (const col of ["A", "C"]) {
+      for (const k of lookupKeys(code, col)) {
+        const rec = maps[col].get(k);
+        if (rec) {
+          const images = String(rec.b).split("|").map((s) => s.trim()).filter(Boolean);
+          if (images.length) {
+            // ป้ายรหัส: พบใน A -> "รหัส (ค่า C)" ; พบใน C -> "รหัส (ค่า A ตัด _0 ท้าย)"
+            const other = col === "A" ? rec.c : String(rec.a || "").replace(/_0$/, "");
+            return { col, key: k, images, label: other ? code + " (" + other + ")" : code };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  const api = { normalizeKey, supportsNativeUnzip, openZip, getSheetNames, readLinkFile, buildMaps, lookupKeys, cleanCode, search };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.PicCore = api;
+})(typeof self !== "undefined" ? self : this);
+
+/*CORE-END*/
+    </script>
+    <script>
+      "use strict";
+      const APP_VERSION = "2.1";
+      const $ = (id) => document.getElementById(id);
+      const show = (el, on) => $(el).classList.toggle("hidden", !on);
+      function setStatus(id, text, cls) { const el = $(id); el.textContent = text; el.className = "status" + (cls ? " " + cls : ""); }
+      let toastTimer = null;
+      function toast(msg, ms) {
+        const t = $("toast"); t.textContent = msg; t.style.display = "block";
+        clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.style.display = "none"), ms || 2500);
+      }
+      // ================= v2.1: วินิจฉัยปัญหาบนจอ =================
+      const diagLog = [];
+      function diag(msg) {
+        const line = new Date().toLocaleTimeString("th-TH") + "  " + msg;
+        diagLog.push(line); if (diagLog.length > 40) diagLog.shift();
+        renderDiag();
+      }
+      function renderDiag() {
+        const el = document.getElementById("diag"); if (!el) return;
+        const has = (x) => (x ? "มี" : "ไม่มี");
+        let dsRaw = false; try { new DecompressionStream("deflate-raw"); dsRaw = true; } catch (e) {}
+        el.textContent = [
+          "แอป: v" + (typeof APP_VERSION !== "undefined" ? APP_VERSION : "?"),
+          "URL: " + location.protocol + "//" + location.host + location.pathname,
+          "เบราว์เซอร์: " + navigator.userAgent,
+          "ติดตั้งเป็นแอป: " + (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true ? "ใช่" : "ไม่"),
+          "DecompressionStream(deflate-raw): " + has(dsRaw) + " | TextDecoderStream: " + has(typeof TextDecoderStream !== "undefined"),
+          "IndexedDB: " + has(typeof indexedDB !== "undefined") + " | ServiceWorker: " + has("serviceWorker" in navigator) + " | core: " + has(typeof PicCore !== "undefined"),
+          "--- log ---",
+        ].concat(diagLog).join("\n");
+      }
+      window.addEventListener("error", (e) => {
+        diag("❌ JS error: " + (e.message || e) + (e.filename ? " @ " + e.filename.split("/").pop() + ":" + e.lineno : ""));
+        const b = document.getElementById("unsupported");
+        if (b) { b.textContent = "❌ เกิดข้อผิดพลาดในโปรแกรม: " + e.message + " (ดูรายละเอียดใน “ข้อมูลสำหรับแจ้งปัญหา” ด้านล่าง)"; b.classList.remove("hidden"); }
+      });
+      window.addEventListener("unhandledrejection", (e) => diag("❌ Promise error: " + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason)));
+
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+      const fmtDate = (t) => new Date(t).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
+
+      // ================= IndexedDB: เก็บข้อมูลไฟล์ลิงก์ไว้ในเครื่อง =================
+      // เก็บเป็น array [a, b, c] (เล็กกว่าเก็บเป็น object) + meta แยก record เพื่ออ่าน meta ได้เร็ว
+      const DB_NAME = "picSearchApp", STORE = "kv";
+      function openDB() {
+        return new Promise((res, rej) => {
+          const r = indexedDB.open(DB_NAME, 1);
+          r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+          r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+        });
+      }
+      async function dbPut(pairs) { // บันทึกหลาย key ใน transaction เดียว (ข้อมูลกับ meta ไม่หลุดกัน)
+        const db = await openDB();
+        return new Promise((res, rej) => {
+          const tx = db.transaction(STORE, "readwrite");
+          for (const [k, v] of pairs) tx.objectStore(STORE).put(v, k);
+          tx.oncomplete = res; tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error("บันทึกไม่สำเร็จ (พื้นที่เครื่องเต็ม?)"));
+        });
+      }
+      async function dbGet(k) {
+        const db = await openDB();
+        return new Promise((res, rej) => {
+          const r = db.transaction(STORE, "readonly").objectStore(STORE).get(k);
+          r.onsuccess = () => res(r.result ?? null); r.onerror = () => rej(r.error);
+        });
+      }
+      async function dbClear() {
+        const db = await openDB();
+        return new Promise((res, rej) => {
+          const tx = db.transaction(STORE, "readwrite"); tx.objectStore(STORE).clear();
+          tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+        });
+      }
+
+      // ================= state =================
+      const state = { maps: null, meta: null, busy: false };
+
+      function renderMeta() {
+        const m = state.meta;
+        show("meta", !!m); show("danger-zone", !!m); show("btn-close-setup", !!m);
+        if (!m) return;
+        $("meta").innerHTML = "";
+        const add = (k, v) => { const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = v; $("meta").append(dt, dd); };
+        add("ไฟล์", m.fileName + " [" + m.sheetName + "]");
+        add("รหัส", "คอลัมน์ A " + m.countA.toLocaleString() + " / คอลัมน์ C " + m.countC.toLocaleString());
+        if (m.fileModified) add("ไฟล์แก้ไขล่าสุด", fmtDate(m.fileModified));
+        add("โหลดเข้าแอปเมื่อ", fmtDate(m.savedAt));
+        if (m.saved === false) add("บันทึกในเครื่อง", "❌ บันทึกไม่ได้ (ใช้ได้เฉพาะรอบนี้)");
+        else add("พื้นที่ถาวร", m.persisted ? "✅ ระบบจะไม่ลบอัตโนมัติ" : (isIOS && !isStandalone ? "⚠ ติดตั้งเป็นแอปก่อน ไม่งั้น Safari อาจลบเมื่อไม่ได้เปิด 7 วัน" : "⚠ ระบบอาจลบเมื่อพื้นที่เครื่องเหลือน้อย"));
+        $("setup-title").textContent = "📄 ไฟล์ลิงก์รูปในเครื่อง";
+        $("setup-hint").textContent = "ข้อมูลไฟล์ลิงก์เก็บอยู่ในเครื่องนี้แล้ว — เมื่อมีไฟล์ลิงก์ใหม่ใน Shared Drive ให้กด “อัปเดตไฟล์ลิงก์” แล้วเลือกไฟล์ใหม่";
+        $("btn-pick").textContent = "🔄 อัปเดตไฟล์ลิงก์";
+      }
+      function setSearchEnabled(on) {
+        $("code").disabled = !on; $("btn-search").disabled = !on;
+        $("code").placeholder = on ? "รหัส AMOS / AS400" : "เลือกไฟล์ลิงก์ก่อน แล้วจึงค้นได้";
+        if (!on) setStatus("search-status", "⚠ ยังค้นหาไม่ได้ — เลือกไฟล์ลิงก์รูปด้านล่างก่อน", "warn");
+      }
+      function goSearch() {
+        show("setup", false); setSearchEnabled(true);
+        if (!isIOS) $("code").focus(); // iOS เด้งคีย์บอร์ดเองไม่ได้ถ้าไม่ได้แตะ - ไม่ต้องสั่ง
+      }
+      function goSetup() {
+        show("setup", true); setSearchEnabled(!!state.maps); show("result", false);
+        renderMeta(); setStatus("setup-status", "");
+        $("setup").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      // ================= เลือก/อ่านไฟล์ลิงก์ -> เก็บในเครื่อง =================
+      async function importFile(file) {
+        diag("เลือกไฟล์: " + file.name + " | " + file.size.toLocaleString() + " bytes | type=" + (file.type || "-"));
+        // ตรวจจากเนื้อไฟล์ (ZIP ขึ้นต้นด้วย "PK") แทนนามสกุล - ไฟล์จาก OneDrive/Drive บางครั้งชื่อไม่มี .xlsx
+        let sig = "";
+        try { sig = String.fromCharCode(...new Uint8Array(await file.slice(0, 2).arrayBuffer())); }
+        catch (e) { diag("❌ อ่านไฟล์ไม่ได้: " + e.message); setStatus("setup-status", "❌ เปิดไฟล์ไม่ได้: " + e.message + " — ถ้าเลือกจาก OneDrive ลองกด “ดาวน์โหลด/ทำให้พร้อมใช้งานออฟไลน์” ก่อน", "bad"); return; }
+        if (file.size === 0) { setStatus("setup-status", "❌ ไฟล์ว่าง (0 bytes) — ไฟล์จาก OneDrive อาจยังดาวน์โหลดไม่เสร็จ ลองเลือกใหม่", "bad"); diag("ไฟล์ 0 bytes"); return; }
+        if (sig !== "PK") {
+          const hint = /\.xls$/i.test(file.name) ? " (ไฟล์ .xls รุ่นเก่า ให้เปิดใน Excel แล้ว Save As เป็น .xlsx)" : /\.csv$/i.test(file.name) ? " (ไฟล์ .csv ให้ Save As เป็น .xlsx)" : "";
+          setStatus("setup-status", "❌ ไม่ใช่ไฟล์ .xlsx: " + file.name + hint, "bad"); diag("signature ไม่ใช่ PK: " + JSON.stringify(sig)); return;
+        }
+        state.busy = true; $("btn-pick").disabled = true; $("progress").style.display = "block";
+        setStatus("setup-status", "📄 กำลังอ่าน " + file.name + " ...", "warn");
+        try {
+          const t0 = performance.now();
+          const { rows, sheetName, totalRows } = await PicCore.readLinkFile(file, async (n) => {
+            setStatus("setup-status", "📄 กำลังอ่าน " + file.name + " (" + n.toLocaleString() + " แถว)", "warn");
+            await new Promise((r) => setTimeout(r, 0)); // ให้หน้าจอได้อัปเดตตัวเลข
+          });
+          if (!rows.length) throw new Error("ชีต " + sheetName + " ไม่มีแถวที่มีลิงก์รูปในคอลัมน์ B");
+          const maps = PicCore.buildMaps(rows);
+          setStatus("setup-status", "💾 กำลังบันทึกลงเครื่อง (" + rows.length.toLocaleString() + " แถว) ...", "warn");
+          diag("อ่านไฟล์สำเร็จ: " + totalRows.toLocaleString() + " แถว, มีลิงก์ " + rows.length.toLocaleString() + " แถว, A=" + maps.A.size + " C=" + maps.C.size);
+          // บางเบราว์เซอร์ persist() ค้างหรือถามผู้ใช้ - รอไม่เกิน 3 วินาที
+          let persisted = false;
+          try {
+            if (navigator.storage && navigator.storage.persist)
+              persisted = await Promise.race([navigator.storage.persist(), new Promise((r) => setTimeout(() => r(false), 3000))]);
+          } catch (e) { diag("persist(): " + e.message); }
+          const meta = {
+            fileName: file.name, sheetName, totalRows, rowCount: rows.length,
+            countA: maps.A.size, countC: maps.C.size,
+            fileModified: file.lastModified || null, savedAt: Date.now(), persisted, app: APP_VERSION,
+          };
+          // v2.1: บันทึกลงเครื่องไม่ได้ (เช่นเปิดจากไฟล์ในเครื่อง / โหมดไม่ระบุตัวตน / พื้นที่เต็ม) ก็ยังค้นได้ในรอบนี้
+          let saved = true;
+          try { await dbPut([["rows", rows.map((r) => [r.a, r.b, r.c])], ["meta", meta]]); diag("บันทึก IndexedDB สำเร็จ, persisted=" + persisted); }
+          catch (e) { saved = false; diag("❌ บันทึก IndexedDB ไม่สำเร็จ: " + (e && e.name) + " " + (e && e.message)); }
+          meta.saved = saved;
+          state.maps = maps; state.meta = meta;
+          renderMeta();
+          const secs = ((performance.now() - t0) / 1000).toFixed(1);
+          if (saved) setStatus("setup-status", "✅ บันทึกในเครื่องแล้ว " + rows.length.toLocaleString() + " แถว (" + secs + " วินาที)", "ok");
+          else setStatus("setup-status", "⚠ อ่านไฟล์สำเร็จ ค้นได้แล้ว แต่เครื่องนี้บันทึกข้อมูลไว้ไม่ได้ — ปิดแอปแล้วต้องเลือกไฟล์ใหม่ (ดูสาเหตุใน “ข้อมูลสำหรับแจ้งปัญหา”)", "warn");
+          toast("✅ พร้อมค้นหาแล้ว");
+          setTimeout(goSearch, 700);
+        } catch (e) {
+          console.error(e);
+          diag("❌ อ่านไฟล์ไม่สำเร็จ: " + e.message + (e.cause && e.cause.name ? " (" + e.cause.name + ")" : "") + (e.stack ? "\n" + String(e.stack).split("\n").slice(0, 4).join("\n") : ""));
+          setStatus("setup-status", "❌ อ่าน/บันทึกไฟล์ไม่สำเร็จ: " + e.message + (state.maps ? " — ยังใช้ข้อมูลเดิมค้นได้ตามปกติ" : ""), "bad");
+        } finally {
+          state.busy = false; $("btn-pick").disabled = false; $("progress").style.display = "none";
+        }
+      }
+
+      async function loadStored() {
+        try {
+          const meta = await dbGet("meta");
+          if (!meta) return false;
+          const packed = await dbGet("rows");
+          if (!packed || !packed.length) return false;
+          state.maps = PicCore.buildMaps(packed.map((x) => ({ a: x[0], b: x[1], c: x[2] })));
+          // persist อาจเปลี่ยนหลังติดตั้งเป็นแอป -> เช็กใหม่ทุกครั้ง
+          try {
+            if (navigator.storage && navigator.storage.persisted) {
+              meta.persisted = await navigator.storage.persisted();
+              if (!meta.persisted && navigator.storage.persist) meta.persisted = await navigator.storage.persist();
+            }
+          } catch (e) {}
+          state.meta = meta;
+          return true;
+        } catch (e) {
+          console.warn("อ่านข้อมูลในเครื่องไม่ได้", e);
+          return false;
+        }
+      }
+
+      // ================= ค้นหา =================
+      function doSearch(raw) {
+        if (!state.maps) { goSetup(); return; }
+        const code = PicCore.cleanCode(raw);
+        if (!code) { setStatus("search-status", "กรุณาใส่รหัส AMOS หรือรหัส AS400", "bad"); return; }
+        setStatus("search-status", "");
+        const hit = PicCore.search(state.maps, code);
+        const steps = [];
+        const keysA = PicCore.lookupKeys(code, "A").join(" / "), keysC = PicCore.lookupKeys(code, "C").join(" / ");
+        if (hit) {
+          if (hit.col === "C") steps.push(["", "คอลัมน์ A: ไม่พบ " + keysA + " → ค้นคอลัมน์ C ต่อ"]);
+          steps.push(["g", "คอลัมน์ " + hit.col + ": พบ " + hit.key + " → ใช้ลิงก์คอลัมน์ B (" + hit.images.length + " รูป)"]);
+        } else {
+          steps.push(["w", "คอลัมน์ A: ไม่พบ " + keysA]);
+          steps.push(["w", "คอลัมน์ C: ไม่พบ " + keysC + " (หรือพบแต่คอลัมน์ B ว่าง) → ไม่พบรูป"]);
+        }
+        steps.push(["", "ไฟล์: " + state.meta.fileName + " [" + state.meta.sheetName + "] (โหลดเมื่อ " + fmtDate(state.meta.savedAt) + ")"]);
+        const r = hit ? { code, found: true, ...hit, steps } : { code, found: false, images: [], steps };
+        addHistory(r);
+        render(r);
+        $("code").blur(); // ซ่อนคีย์บอร์ดให้เห็นรูป
+        $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      let current = null, currentImg = 0;
+      function render(r) {
+        current = r; currentImg = 0;
+        const box = $("result");
+        box.innerHTML = ""; show("result", true);
+        const head = document.createElement("div"); head.className = "result-head";
+        const src = document.createElement("span");
+        src.className = "src " + (r.found ? "found" : "none");
+        src.textContent = r.found ? "✅ พบในคอลัมน์ " + r.col : "❌ ไม่พบรูป";
+        const codeEl = document.createElement("div");
+        codeEl.style.cssText = "font-family:var(--mono);font-weight:700";
+        codeEl.textContent = r.code;
+        head.append(codeEl, src); box.appendChild(head);
+
+        if (r.found) {
+          const imgbox = document.createElement("div"); imgbox.className = "imgbox";
+          const img = document.createElement("img");
+          img.id = "main-img"; img.alt = r.label; img.referrerPolicy = "no-referrer";
+          img.onerror = () => {
+            const d = document.createElement("div"); d.className = "status bad"; d.id = "main-img";
+            d.textContent = navigator.onLine ? "โหลดรูปไม่ได้ (ลิงก์เสีย หรือเครือข่ายบล็อก) — ลองกด “เปิดรูป”" : "📴 ไม่มีอินเทอร์เน็ต — ต่อเน็ตแล้วค้นใหม่เพื่อโหลดรูป";
+            img.replaceWith(d);
+          };
+          img.src = r.images[0];
+          const lab = document.createElement("div"); lab.className = "imglabel"; lab.textContent = r.label;
+          imgbox.append(img, lab); box.appendChild(imgbox);
+
+          if (r.images.length > 1) {
+            const th = document.createElement("div"); th.className = "thumbs";
+            r.images.forEach((u, i) => {
+              const t = document.createElement("img");
+              t.src = u; t.referrerPolicy = "no-referrer"; t.alt = "รูปที่ " + (i + 1);
+              if (i === 0) t.classList.add("active");
+              t.onclick = () => {
+                currentImg = i;
+                const m = $("main-img"); if (m && m.tagName === "IMG") m.src = u;
+                $("img-url").textContent = u;
+                th.querySelectorAll("img").forEach((x) => x.classList.remove("active"));
+                t.classList.add("active");
+              };
+              th.appendChild(t);
+            });
+            box.appendChild(th);
+          }
+
+          const actions = document.createElement("div"); actions.className = "row"; actions.style.marginTop = "10px";
+          const bOpen = document.createElement("button"); bOpen.className = "btn secondary"; bOpen.textContent = "↗ เปิดรูป";
+          bOpen.onclick = () => window.open(r.images[currentImg], "_blank", "noopener");
+          actions.appendChild(bOpen);
+          if (navigator.share) {
+            // แชร์ "ลิงก์รูป + รหัส" ไป LINE/แชท (แชร์ไฟล์รูปตรง ๆ ต้องโหลดรูปข้ามโดเมน ซึ่งเซิร์ฟเวอร์รูปไม่อนุญาต CORS)
+            const bShare = document.createElement("button"); bShare.className = "btn secondary"; bShare.textContent = "📤 แชร์ลิงก์รูป";
+            bShare.onclick = async () => {
+              try { await navigator.share({ title: r.label, text: r.label, url: r.images[currentImg] }); }
+              catch (e) { if (e.name !== "AbortError") toast("แชร์ไม่ได้: " + e.message); }
+            };
+            actions.appendChild(bShare);
+          }
+          box.appendChild(actions);
+          const tip = document.createElement("div"); tip.className = "tip";
+          tip.textContent = "💡 กดค้างที่รูป → บันทึกรูป / แชร์ หรือแคปหน้าจอ (ป้ายรหัสอยู่ใต้รูปแล้ว)";
+          box.appendChild(tip);
+          const url = document.createElement("div"); url.className = "url"; url.id = "img-url"; url.textContent = r.images[0];
+          box.appendChild(url);
+        } else {
+          const e = document.createElement("div"); e.className = "result-empty";
+          e.textContent = "ไม่พบรหัสนี้ทั้งคอลัมน์ A และ C ในไฟล์ลิงก์";
+          box.appendChild(e);
+        }
+
+        const det = document.createElement("details"); det.className = "steps";
+        const sum = document.createElement("summary"); sum.textContent = "รายละเอียดการค้น";
+        const st = document.createElement("div"); st.className = "box";
+        r.steps.forEach(([cls, t]) => { const d = document.createElement("div"); if (cls) d.className = cls; d.textContent = t; st.appendChild(d); });
+        det.append(sum, st); box.appendChild(det);
+      }
+
+      // ================= ประวัติการค้น (จำไว้ในเครื่อง) =================
+      const HIST_KEY = "picSearchHistory";
+      let history = [];
+      try { history = JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); } catch (e) { history = []; }
+      function renderHistory() {
+        const box = $("history"); box.innerHTML = "";
+        history.forEach((h) => {
+          const c = document.createElement("span");
+          c.className = "chip" + (h.found ? "" : " nf");
+          c.textContent = h.code;
+          c.onclick = () => { $("code").value = h.code; doSearch(h.code); };
+          box.appendChild(c);
+        });
+      }
+      function addHistory(r) {
+        history = history.filter((h) => h.code !== r.code);
+        history.unshift({ code: r.code, found: r.found });
+        if (history.length > 15) history.length = 15;
+        try { localStorage.setItem(HIST_KEY, JSON.stringify(history)); } catch (e) {}
+        renderHistory();
+      }
+
+      // ================= events =================
+      $("btn-search").addEventListener("click", () => doSearch($("code").value));
+      $("code").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch($("code").value); } });
+      $("btn-pick").addEventListener("click", () => { if (!state.busy) $("f-link").click(); });
+      $("f-link").addEventListener("change", async (e) => {
+        const f = e.target.files && e.target.files[0];
+        e.target.value = ""; // เลือกไฟล์ชื่อเดิมซ้ำได้ (ไฟล์อัปเดตแล้ว)
+        if (f) await importFile(f);
+      });
+      $("btn-settings").addEventListener("click", () => ($("setup").classList.contains("hidden") ? goSetup() : (state.maps && goSearch())));
+      $("btn-close-setup").addEventListener("click", goSearch);
+      $("btn-clear").addEventListener("click", async () => {
+        if (!confirm("ลบข้อมูลไฟล์ลิงก์ที่เก็บไว้ในเครื่องนี้? (ต้องเลือกไฟล์ใหม่ก่อนจึงจะค้นได้)")) return;
+        try { await dbClear(); } catch (e) {}
+        state.maps = null; state.meta = null;
+        $("btn-pick").textContent = "📄 เลือกไฟล์ลิงก์ (.xlsx)";
+        $("setup-title").textContent = "📄 เริ่มใช้งาน: เลือกไฟล์ลิงก์รูป";
+        goSetup();
+        setStatus("setup-status", "ลบข้อมูลแล้ว", "ok");
+      });
+
+      $("btn-copy-diag").addEventListener("click", async () => {
+        const txt = $("diag").textContent;
+        try { await navigator.clipboard.writeText(txt); toast("📋 คัดลอกแล้ว"); }
+        catch (e) { const r = document.createRange(); r.selectNodeContents($("diag")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("เลือกข้อความแล้ว กดค้างเพื่อคัดลอก"); }
+      });
+
+      // ---- ติดตั้งแอป ----
+      let deferredPrompt = null;
+      window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; show("btn-install", true); }); // Android/Chrome/Edge
+      $("btn-install").addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        try { await deferredPrompt.userChoice; } catch (e) {}
+        deferredPrompt = null; show("btn-install", false);
+      });
+      window.addEventListener("appinstalled", () => { show("btn-install", false); toast("✅ ติดตั้งแอปแล้ว เปิดจากไอคอนบนหน้าโฮมได้เลย", 3500); });
+      try {
+        if (isIOS && !isStandalone && localStorage.getItem("iosInstallClosed") !== "1") show("ios-install", true);
+      } catch (e) { if (isIOS && !isStandalone) show("ios-install", true); }
+      $("ios-install-close").addEventListener("click", () => { show("ios-install", false); try { localStorage.setItem("iosInstallClosed", "1"); } catch (e) {} });
+
+      // ---- service worker (ใช้ออฟไลน์ + อัปเดตเวอร์ชัน) ----
+      if ("serviceWorker" in navigator && location.protocol === "https:") {
+        navigator.serviceWorker.register("sw.js").then((reg) => {
+          reg.addEventListener("updatefound", () => {
+            const nw = reg.installing;
+            nw && nw.addEventListener("statechange", () => {
+              if (nw.state === "installed" && navigator.serviceWorker.controller) toast("🔄 มีแอปเวอร์ชันใหม่ — ปิดแล้วเปิดแอปใหม่เพื่ออัปเดต", 5000);
+            });
+          });
+        }).catch((e) => console.warn("SW", e));
+      }
+
+      // ================= เริ่มต้น =================
+      (async () => {
+        renderDiag();
+        diag("เปิดแอป");
+        setSearchEnabled(false);
+        if (typeof PicCore === "undefined") {
+          $("unsupported").textContent = "❌ โหลดส่วนอ่านไฟล์ (core) ไม่ได้ — ไฟล์แอปไม่ครบ";
+          show("unsupported", true); goSetup(); return;
+        }
+        if (location.protocol === "file:" || location.protocol === "content:") {
+          $("unsupported").innerHTML = "⚠ เปิดจากไฟล์ในเครื่อง — ใช้ทดสอบได้ แต่<b>ติดตั้งเป็นแอปไม่ได้</b> ต้องเปิดจากลิงก์เว็บ (https) ที่ฝากไฟล์แอปไว้";
+          show("unsupported", true);
+        }
+        if (!PicCore.supportsNativeUnzip()) {
+          $("unsupported").innerHTML = "❌ เบราว์เซอร์/ระบบนี้เก่าเกินไป อ่านไฟล์ .xlsx ไม่ได้ — ต้องเป็น <b>iOS 16.4 ขึ้นไป</b> หรือ <b>Chrome 103 ขึ้นไป</b>";
+          show("unsupported", true);
+        }
+        renderHistory();
+        setStatus("setup-status", "");
+        if (await loadStored()) {
+          renderMeta(); goSearch();
+          setStatus("search-status", "ข้อมูลไฟล์ลิงก์: " + state.meta.fileName + " (โหลดเมื่อ " + fmtDate(state.meta.savedAt) + ")");
+        } else {
+          goSetup();
+        }
+      })();
+    </script>
+  </body>
+</html>
