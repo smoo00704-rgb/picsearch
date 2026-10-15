@@ -15,7 +15,9 @@
     <meta name="apple-mobile-web-app-title" content="ค้นรูป" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!--
-      PicSearch App v2.0 (PWA) - แยกจาก PicSearch v1.7
+      PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
+      v2.2: ปุ่มเลือกไฟล์เป็น <label for> (iOS), input ไม่ใช้ display:none, เคลียร์ input หลังอ่านเสร็จ, log ทุกขั้นการเลือกไฟล์
+      v2.1: รวม core เป็นไฟล์เดียว, ช่องค้นหาแสดงตลอด, ไม่ใส่ accept, บันทึกไม่ได้ก็ค้นได้, ข้อมูลแจ้งปัญหา
       - ติดตั้งเป็นแอปบนมือถือได้ (Android: ปุ่ม "ติดตั้งแอป" / iOS: แชร์ -> เพิ่มไปยังหน้าจอโฮม)
       - เก็บข้อมูลไฟล์ลิงก์ไว้ในเครื่อง (IndexedDB + ขอ persistent storage) เลือกไฟล์ครั้งเดียว เปิดครั้งต่อไปค้นได้ทันที
       - ใช้งานออฟไลน์ได้ (service worker แคชตัวแอป) - ต้องมีเน็ตเฉพาะตอนโหลดรูป
@@ -132,6 +134,9 @@
       .meta { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: .84rem; margin: 6px 0 10px; }
       .meta dt { color: var(--muted); } .meta dd { margin: 0; word-break: break-all; }
       .hidden { display: none !important; }
+      .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); pointer-events: none; }
+      label.btn { display: inline-block; text-align: center; user-select: none; -webkit-user-select: none; }
+      label.btn.disabled { opacity: .35; box-shadow: none; pointer-events: none; }
       .ver { text-align: center; color: var(--muted); font-size: .72rem; margin-top: 4px; }
     </style>
   </head>
@@ -162,11 +167,12 @@
         </p>
         <dl class="meta hidden" id="meta"></dl>
         <div class="row">
-          <button class="btn" id="btn-pick">📄 เลือกไฟล์ลิงก์ (.xlsx)</button>
+          <!-- v2.2: ใช้ <label for> แตะแล้ว iOS เปิดตัวเลือกไฟล์เองโดยตรง ไม่ต้องผ่าน input.click() จาก JS -->
+          <label class="btn" id="btn-pick" for="f-link" role="button">📄 เลือกไฟล์ลิงก์ (.xlsx)</label>
           <button class="btn secondary hidden" id="btn-close-setup">กลับไปค้นหา</button>
         </div>
-        <input type="file" id="f-link" class="hidden"
-          />
+        <!-- v2.2: ซ่อนแบบมองไม่เห็นแต่ยังอยู่ใน layout (display:none ทำให้ iOS บางรุ่นไม่เปิดตัวเลือกไฟล์) -->
+        <input type="file" id="f-link" class="vh" tabindex="-1" />
         <!-- v2.1: ไม่ใส่ accept - บาง Android/OneDrive รายงานชนิดไฟล์ไม่ตรง ทำให้ไฟล์ .xlsx เป็นสีเทาเลือกไม่ได้ ; ตรวจชนิดไฟล์ในโค้ดแทน -->
         <div class="progress" id="progress"><div></div></div>
         <div class="status" id="setup-status"></div>
@@ -193,7 +199,7 @@
         <pre id="diag" style="font-family: var(--mono); font-size: .72rem; background: var(--panel2); border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-all; margin: 0 0 8px; user-select: text; -webkit-user-select: text"></pre>
         <button class="btn secondary" id="btn-copy-diag" style="padding: 6px 14px; font-size: .8rem">📋 คัดลอก</button>
       </details>
-      <div class="ver" id="ver">PicSearch App v2.1</div>
+      <div class="ver" id="ver">PicSearch App v2.2</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -457,7 +463,7 @@
     </script>
     <script>
       "use strict";
-      const APP_VERSION = "2.1";
+      const APP_VERSION = "2.2";
       const $ = (id) => document.getElementById(id);
       const show = (el, on) => $(el).classList.toggle("hidden", !on);
       function setStatus(id, text, cls) { const el = $(id); el.textContent = text; el.className = "status" + (cls ? " " + cls : ""); }
@@ -488,7 +494,11 @@
         ].concat(diagLog).join("\n");
       }
       window.addEventListener("error", (e) => {
-        diag("❌ JS error: " + (e.message || e) + (e.filename ? " @ " + e.filename.split("/").pop() + ":" + e.lineno : ""));
+        const opaque = e.message === "Script error." && !e.filename;
+        diag("❌ JS error: " + (e.message || e) + (e.filename ? " @ " + e.filename.split("/").pop() + ":" + e.lineno + ":" + e.colno : "") +
+          (e.error && e.error.stack ? "\n" + String(e.error.stack).split("\n").slice(0, 4).join("\n") : "") +
+          (opaque ? " (เบราว์เซอร์ซ่อนรายละเอียด — มักมาจากสคริปต์นอกแอป เช่น ส่วนขยาย Safari / ระบบแปลภาษา)" : ""));
+        if (opaque) return; // ไม่ใช่ error ของแอป ไม่ต้องขึ้นแถบแดง
         const b = document.getElementById("unsupported");
         if (b) { b.textContent = "❌ เกิดข้อผิดพลาดในโปรแกรม: " + e.message + " (ดูรายละเอียดใน “ข้อมูลสำหรับแจ้งปัญหา” ด้านล่าง)"; b.classList.remove("hidden"); }
       });
@@ -577,7 +587,7 @@
           const hint = /\.xls$/i.test(file.name) ? " (ไฟล์ .xls รุ่นเก่า ให้เปิดใน Excel แล้ว Save As เป็น .xlsx)" : /\.csv$/i.test(file.name) ? " (ไฟล์ .csv ให้ Save As เป็น .xlsx)" : "";
           setStatus("setup-status", "❌ ไม่ใช่ไฟล์ .xlsx: " + file.name + hint, "bad"); diag("signature ไม่ใช่ PK: " + JSON.stringify(sig)); return;
         }
-        state.busy = true; $("btn-pick").disabled = true; $("progress").style.display = "block";
+        state.busy = true; $("btn-pick").classList.add("disabled"); $("progress").style.display = "block";
         setStatus("setup-status", "📄 กำลังอ่าน " + file.name + " ...", "warn");
         try {
           const t0 = performance.now();
@@ -617,7 +627,7 @@
           diag("❌ อ่านไฟล์ไม่สำเร็จ: " + e.message + (e.cause && e.cause.name ? " (" + e.cause.name + ")" : "") + (e.stack ? "\n" + String(e.stack).split("\n").slice(0, 4).join("\n") : ""));
           setStatus("setup-status", "❌ อ่าน/บันทึกไฟล์ไม่สำเร็จ: " + e.message + (state.maps ? " — ยังใช้ข้อมูลเดิมค้นได้ตามปกติ" : ""), "bad");
         } finally {
-          state.busy = false; $("btn-pick").disabled = false; $("progress").style.display = "none";
+          state.busy = false; $("btn-pick").classList.remove("disabled"); $("progress").style.display = "none";
         }
       }
 
@@ -769,11 +779,28 @@
       // ================= events =================
       $("btn-search").addEventListener("click", () => doSearch($("code").value));
       $("code").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch($("code").value); } });
-      $("btn-pick").addEventListener("click", () => { if (!state.busy) $("f-link").click(); });
+      let pickPending = false;
+      $("btn-pick").addEventListener("click", () => { pickPending = true; diag("แตะปุ่มเลือกไฟล์"); });
+      $("f-link").addEventListener("cancel", () => { pickPending = false; diag("ตัวเลือกไฟล์ถูกปิด (ยกเลิก / ไม่ได้เลือก)"); });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && pickPending)
+          setTimeout(() => { if (pickPending) diag("กลับมาที่แอปแล้ว แต่ยังไม่ได้รับไฟล์ (ถ้าเลือกไฟล์ไปแล้ว อาจกำลังดาวน์โหลดจาก OneDrive)"); }, 1500);
+      });
       $("f-link").addEventListener("change", async (e) => {
-        const f = e.target.files && e.target.files[0];
-        e.target.value = ""; // เลือกไฟล์ชื่อเดิมซ้ำได้ (ไฟล์อัปเดตแล้ว)
-        if (f) await importFile(f);
+        pickPending = false;
+        const input = e.target;
+        try {
+          const n = input.files ? input.files.length : -1;
+          diag("ได้รับเหตุการณ์ change: จำนวนไฟล์ = " + n);
+          const f = n > 0 ? input.files[0] : null;
+          if (!f) { setStatus("setup-status", "⚠ ไม่ได้รับไฟล์จากตัวเลือกไฟล์ — ลองเลือกใหม่ หรือดาวน์โหลดไฟล์ลงเครื่อง (แอป Files → On My iPhone) แล้วเลือกจากตรงนั้น", "warn"); return; }
+          await importFile(f);
+        } catch (err) {
+          diag("❌ ขั้นเลือกไฟล์: " + (err && err.name) + " " + (err && err.message) + (err && err.stack ? "\n" + String(err.stack).split("\n").slice(0, 4).join("\n") : ""));
+          setStatus("setup-status", "❌ เลือกไฟล์ไม่สำเร็จ: " + (err && err.message), "bad");
+        } finally {
+          try { input.value = ""; } catch (x) {} // เคลียร์หลังอ่านเสร็จ เพื่อให้เลือกไฟล์ชื่อเดิมซ้ำได้
+        }
       });
       $("btn-settings").addEventListener("click", () => ($("setup").classList.contains("hidden") ? goSetup() : (state.maps && goSearch())));
       $("btn-close-setup").addEventListener("click", goSearch);
