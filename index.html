@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>ค้นรูปสินค้า</title>
+    <meta name="author" content="SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)" />
     <meta name="description" content="ค้นรูปสินค้าด้วยรหัส AMOS / AS400 จากไฟล์ลิงก์ที่เก็บไว้ในเครื่อง" />
     <meta name="theme-color" content="#6a5cf5" />
     <link rel="manifest" href="manifest.webmanifest" />
@@ -12,10 +13,12 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="ค้นรูป" />
+    <meta name="apple-mobile-web-app-title" content="ค้นรูปสินค้า" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!--
       PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
+      v2.4: ชื่อแอปบนหน้าโฮม "ค้นรูปสินค้า", ใส่ชื่อผู้พัฒนา (Suwanneepatt@24shopping.co.th) ที่แถบบนและท้ายหน้า
+      v2.3: รูปที่แสดงมีรหัสอยู่ในตัวรูป (canvas) กดค้างคัดลอก/บันทึกได้รหัสด้วย, ปุ่มคัดลอกรูป+รหัส, แชร์ไฟล์รูป, เปิดรูปในแท็บใหม่พร้อมรหัส
       v2.2: ปุ่มเลือกไฟล์เป็น <label for> (iOS), input ไม่ใช้ display:none, เคลียร์ input หลังอ่านเสร็จ, log ทุกขั้นการเลือกไฟล์
       v2.1: รวม core เป็นไฟล์เดียว, ช่องค้นหาแสดงตลอด, ไม่ใส่ accept, บันทึกไม่ได้ก็ค้นได้, ข้อมูลแจ้งปัญหา
       - ติดตั้งเป็นแอปบนมือถือได้ (Android: ปุ่ม "ติดตั้งแอป" / iOS: แชร์ -> เพิ่มไปยังหน้าจอโฮม)
@@ -47,6 +50,7 @@
         box-shadow: 0 2px 10px rgba(106, 92, 245, .25);
       }
       .topbar .title { font-size: 1.05rem; font-weight: 700; }
+      .topbar .badge { display: inline-block; margin-top: 3px; background: rgba(255,255,255,.18); padding: 2px 10px; border-radius: 999px; font-size: .7rem; word-break: break-all; }
       .iconbtn {
         background: rgba(255,255,255,.18); color: #fff; border: 0; border-radius: 999px;
         padding: 6px 12px; font: inherit; font-size: .8rem; cursor: pointer;
@@ -58,13 +62,13 @@
       }
       .card h2 { font-size: .98rem; margin: 0 0 4px; color: #3a3760; }
       .hint { color: var(--muted); font-size: .84rem; margin: 2px 0 10px; }
-      button.btn {
+      .btn {
         background: var(--accent); color: #fff; border: none; border-radius: 999px; padding: 12px 20px;
         font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(106,92,245,.3);
       }
-      button.btn:disabled { opacity: .35; box-shadow: none; cursor: not-allowed; }
-      button.btn.secondary { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
-      button.btn.block { width: 100%; }
+      .btn:disabled { opacity: .35; box-shadow: none; cursor: not-allowed; }
+      .btn.secondary { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
+      .btn.block { width: 100%; }
       .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
       .status { font-size: .84rem; color: var(--muted); margin-top: 8px; word-break: break-word; }
       .status.ok { color: var(--good); } .status.warn { color: var(--warn); } .status.bad { color: var(--bad); }
@@ -97,6 +101,13 @@
         -webkit-touch-callout: default; /* iOS: ให้กดค้างแล้วมีเมนูบันทึกรูป */
       }
       .imglabel { font-family: var(--mono); font-weight: 700; font-size: 1.1rem; text-align: center; word-break: break-all; }
+      .baked { font-size: .74rem; color: var(--good); text-align: center; }
+      /* v2.3: หน้าดูรูป (เปิดในแท็บใหม่) */
+      body.viewer { background: #fff; padding: 0; }
+      .viewer-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom)); }
+      .viewer-wrap img { max-width: 100%; max-height: 82vh; object-fit: contain; -webkit-touch-callout: default; }
+      .viewer-wrap .imglabel { font-size: 1.6rem; }
+      .viewer-wrap .tip { text-align: center; }
       .thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
       .thumbs img {
         width: 64px; height: 64px; object-fit: contain; border: 2px solid var(--border); border-radius: 8px; background: #fff;
@@ -142,7 +153,10 @@
   </head>
   <body>
     <div class="topbar">
-      <div class="title">🔍 ค้นรูปสินค้า</div>
+      <div>
+        <div class="title">🔍 ค้นรูปสินค้า</div>
+        <div class="badge" id="dev-badge">v2.4 (Suwanneepatt@24shopping.co.th)</div>
+      </div>
       <div class="row">
         <button class="iconbtn hidden" id="btn-install">⬇ ติดตั้งแอป</button>
         <button class="iconbtn" id="btn-settings" title="ไฟล์ลิงก์">📄 ไฟล์ลิงก์</button>
@@ -199,7 +213,7 @@
         <pre id="diag" style="font-family: var(--mono); font-size: .72rem; background: var(--panel2); border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-all; margin: 0 0 8px; user-select: text; -webkit-user-select: text"></pre>
         <button class="btn secondary" id="btn-copy-diag" style="padding: 6px 14px; font-size: .8rem">📋 คัดลอก</button>
       </details>
-      <div class="ver" id="ver">PicSearch App v2.2</div>
+      <div class="ver" id="ver">ค้นรูปสินค้า v2.4 • ผู้พัฒนา: SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -463,7 +477,7 @@
     </script>
     <script>
       "use strict";
-      const APP_VERSION = "2.2";
+      const APP_VERSION = "2.4";
       const $ = (id) => document.getElementById(id);
       const show = (el, on) => $(el).classList.toggle("hidden", !on);
       function setStatus(id, text, cls) { const el = $(id); el.textContent = text; el.className = "status" + (cls ? " " + cls : ""); }
@@ -563,7 +577,7 @@
       function setSearchEnabled(on) {
         $("code").disabled = !on; $("btn-search").disabled = !on;
         $("code").placeholder = on ? "รหัส AMOS / AS400" : "เลือกไฟล์ลิงก์ก่อน แล้วจึงค้นได้";
-        if (!on) setStatus("search-status", "⚠ ยังค้นหาไม่ได้ — เลือกไฟล์ลิงก์รูปด้านล่างก่อน", "warn");
+        if (!on) setStatus("search-status", "⚠ ยังค้นหาไม่ได้ — เลือกไฟล์ลิงก์รูปด้านบนก่อน", "warn");
       }
       function goSearch() {
         show("setup", false); setSearchEnabled(true);
@@ -677,8 +691,69 @@
         $("result").scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
+      // ================= v2.3: รวม "รูป + รหัส" เป็นรูปเดียว (canvas) =================
+      // ต้องโหลดรูปผ่าน fetch แบบ CORS: ถ้าเซิร์ฟเวอร์รูปไม่ส่ง Access-Control-Allow-Origin
+      // เบราว์เซอร์จะไม่ยอมให้วาดรูปลง canvas แล้ว export (tainted canvas) -> ใช้วิธีสำรอง (รูป + ป้ายรหัส HTML)
+      const compCache = new Map(); // key = url + "\n" + label -> { promise, result: {blob, objUrl} | null, error }
+      function clearCompCache() {
+        for (const v of compCache.values()) if (v.result) URL.revokeObjectURL(v.result.objUrl);
+        compCache.clear();
+      }
+      function loadImageFromBlob(blob) {
+        return new Promise((res, rej) => {
+          const u = URL.createObjectURL(blob), im = new Image();
+          im.onload = () => res({ im, u });
+          im.onerror = () => { URL.revokeObjectURL(u); rej(new Error("ไฟล์ที่ได้ไม่ใช่รูปภาพ")); };
+          im.src = u;
+        });
+      }
+      async function composeImage(url, label) {
+        let resp;
+        try { resp = await fetch(url, { mode: "cors", credentials: "omit", referrerPolicy: "no-referrer", cache: "force-cache" }); }
+        catch (e) { const err = new Error("เซิร์ฟเวอร์รูปไม่อนุญาตให้แอปอ่านรูป (CORS) หรือไม่มีเน็ต"); err.code = "CORS"; throw err; }
+        if (!resp.ok) throw new Error("โหลดรูปไม่ได้ (HTTP " + resp.status + ")");
+        const { im, u } = await loadImageFromBlob(await resp.blob());
+        try {
+          const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+          if (!iw || !ih) throw new Error("ขนาดรูปไม่ถูกต้อง");
+          const W = Math.round(Math.min(1200, Math.max(600, iw)));    // รูปเล็กขยายให้ตัวหนังสืออ่านง่าย / รูปใหญ่ย่อ
+          const imgH = Math.round(ih * (W / iw));
+          const pad = Math.round(W * 0.03), band = Math.round(W * 0.11);
+          const c = document.createElement("canvas");
+          c.width = W; c.height = imgH + band;
+          const g = c.getContext("2d");
+          g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+          g.imageSmoothingQuality = "high";
+          g.drawImage(im, 0, 0, W, imgH);
+          g.fillStyle = "#e4e1f7"; g.fillRect(0, imgH, W, Math.max(1, Math.round(W * 0.002)));
+          let fs = Math.round(band * 0.5);
+          const font = (s) => "bold " + s + "px ui-monospace, Menlo, Consolas, 'Courier New', monospace";
+          g.font = font(fs);
+          while (fs > 10 && g.measureText(label).width > W - pad * 2) { fs -= 2; g.font = font(fs); }
+          g.fillStyle = "#2b2a3d"; g.textAlign = "center"; g.textBaseline = "middle";
+          g.fillText(label, W / 2, imgH + band / 2);
+          const blob = await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("สร้างรูปไม่สำเร็จ"))), "image/png"));
+          return { blob, objUrl: URL.createObjectURL(blob) };
+        } finally { URL.revokeObjectURL(u); }
+      }
+      function getComposite(url, label) {
+        const key = url + "\n" + label;
+        let v = compCache.get(key);
+        if (!v) {
+          v = { result: null, error: null };
+          v.promise = composeImage(url, label).then(
+            (r) => { v.result = r; diag("รวมรูป+รหัสสำเร็จ (" + Math.round(r.blob.size / 1024) + " KB)"); return r; },
+            (e) => { v.error = e; diag("รวมรูป+รหัสไม่ได้: " + e.message + " | " + url.slice(0, 80)); throw e; });
+          compCache.set(key, v);
+        }
+        return v;
+      }
+      function safeFileName(s) { return String(s).replace(/[^\w\-()]+/g, "_").slice(0, 60) + ".png"; }
+      function viewerUrl(u, l) { return location.origin + location.pathname + "#view=" + encodeURIComponent(JSON.stringify({ u, l })); }
+
       let current = null, currentImg = 0;
       function render(r) {
+        clearCompCache();
         current = r; currentImg = 0;
         const box = $("result");
         box.innerHTML = ""; show("result", true);
@@ -701,8 +776,11 @@
             img.replaceWith(d);
           };
           img.src = r.images[0];
-          const lab = document.createElement("div"); lab.className = "imglabel"; lab.textContent = r.label;
-          imgbox.append(img, lab); box.appendChild(imgbox);
+          const lab = document.createElement("div"); lab.className = "imglabel"; lab.id = "img-label"; lab.textContent = r.label;
+          const baked = document.createElement("div"); baked.className = "baked hidden"; baked.id = "img-baked";
+          baked.textContent = "✅ รหัสอยู่ในรูปแล้ว — กดค้างที่รูปเพื่อคัดลอก/บันทึก จะได้รหัสไปด้วย";
+          imgbox.append(img, lab, baked); box.appendChild(imgbox);
+          showComposite(r, 0);
 
           if (r.images.length > 1) {
             const th = document.createElement("div"); th.className = "thumbs";
@@ -712,7 +790,8 @@
               if (i === 0) t.classList.add("active");
               t.onclick = () => {
                 currentImg = i;
-                const m = $("main-img"); if (m && m.tagName === "IMG") m.src = u;
+                const m = $("main-img"); if (m && m.tagName === "IMG") { m.src = u; show("img-label", true); show("img-baked", false); }
+                showComposite(r, i);
                 $("img-url").textContent = u;
                 th.querySelectorAll("img").forEach((x) => x.classList.remove("active"));
                 t.classList.add("active");
@@ -723,21 +802,46 @@
           }
 
           const actions = document.createElement("div"); actions.className = "row"; actions.style.marginTop = "10px";
-          const bOpen = document.createElement("button"); bOpen.className = "btn secondary"; bOpen.textContent = "↗ เปิดรูป";
-          bOpen.onclick = () => window.open(r.images[currentImg], "_blank", "noopener");
+          // v2.3: เปิดรูปในแท็บใหม่ = เปิดหน้าดูรูปของแอปเอง (มีรหัสติดไปด้วย) แทนการเปิดลิงก์รูปเปล่า
+          const bOpen = document.createElement("button"); bOpen.className = "btn secondary"; bOpen.textContent = "↗ เปิดรูป (มีรหัส)";
+          bOpen.onclick = () => window.open(viewerUrl(r.images[currentImg], r.label), "_blank");
           actions.appendChild(bOpen);
+
+          // v2.3: คัดลอกรูปที่มีรหัสในตัวลงคลิปบอร์ด (วางใน LINE / Excel / อีเมลได้)
+          if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+            const bCopy = document.createElement("button"); bCopy.className = "btn secondary"; bCopy.textContent = "📋 คัดลอกรูป+รหัส";
+            bCopy.onclick = async () => {
+              const v = getComposite(r.images[currentImg], r.label);
+              try {
+                // Safari: ต้องส่ง Promise เข้า ClipboardItem ทันทีในจังหวะที่แตะ (ห้าม await ก่อน)
+                await navigator.clipboard.write([new ClipboardItem({ "image/png": v.promise.then((x) => x.blob) })]);
+                toast("📋 คัดลอกรูปพร้อมรหัสแล้ว — ไปวางได้เลย");
+              } catch (e) {
+                diag("คัดลอกรูปไม่ได้: " + (e && e.name) + " " + (e && e.message));
+                toast(v.error && v.error.code === "CORS" ? "รูปนี้คัดลอกพร้อมรหัสไม่ได้ (เว็บรูปไม่อนุญาต) — ใช้ “เปิดรูป” แล้วแคปหน้าจอ" : "คัดลอกไม่ได้: " + (e && e.message), 4000);
+              }
+            };
+            actions.appendChild(bCopy);
+          }
+
+          // v2.3: แชร์ "ไฟล์รูปที่มีรหัส" (ถ้าทำรูปรวมได้) ไม่งั้นแชร์ลิงก์รูป + รหัส
           if (navigator.share) {
-            // แชร์ "ลิงก์รูป + รหัส" ไป LINE/แชท (แชร์ไฟล์รูปตรง ๆ ต้องโหลดรูปข้ามโดเมน ซึ่งเซิร์ฟเวอร์รูปไม่อนุญาต CORS)
-            const bShare = document.createElement("button"); bShare.className = "btn secondary"; bShare.textContent = "📤 แชร์ลิงก์รูป";
+            const bShare = document.createElement("button"); bShare.className = "btn secondary"; bShare.textContent = "📤 แชร์";
             bShare.onclick = async () => {
-              try { await navigator.share({ title: r.label, text: r.label, url: r.images[currentImg] }); }
-              catch (e) { if (e.name !== "AbortError") toast("แชร์ไม่ได้: " + e.message); }
+              const u = r.images[currentImg], v = getComposite(u, r.label);
+              try {
+                if (v.result) {
+                  const file = new File([v.result.blob], safeFileName(r.label), { type: "image/png" });
+                  if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: r.label }); return; }
+                }
+                await navigator.share({ title: r.label, text: r.label, url: u });
+              } catch (e) { if (e.name !== "AbortError") toast("แชร์ไม่ได้: " + e.message); }
             };
             actions.appendChild(bShare);
           }
           box.appendChild(actions);
-          const tip = document.createElement("div"); tip.className = "tip";
-          tip.textContent = "💡 กดค้างที่รูป → บันทึกรูป / แชร์ หรือแคปหน้าจอ (ป้ายรหัสอยู่ใต้รูปแล้ว)";
+          const tip = document.createElement("div"); tip.className = "tip"; tip.id = "img-tip";
+          tip.textContent = "⏳ กำลังเตรียมรูปที่มีรหัสในตัว…";
           box.appendChild(tip);
           const url = document.createElement("div"); url.className = "url"; url.id = "img-url"; url.textContent = r.images[0];
           box.appendChild(url);
@@ -752,6 +856,42 @@
         const st = document.createElement("div"); st.className = "box";
         r.steps.forEach(([cls, t]) => { const d = document.createElement("div"); if (cls) d.className = cls; d.textContent = t; st.appendChild(d); });
         det.append(sum, st); box.appendChild(det);
+      }
+
+      function showComposite(r, i) {
+        const u = r.images[i], v = getComposite(u, r.label);
+        v.promise.then((res) => {
+          if (current !== r || currentImg !== i) return; // ผู้ใช้ค้นใหม่/เปลี่ยนรูปไปแล้ว
+          const m = $("main-img");
+          if (m && m.tagName === "IMG") { m.onerror = null; m.src = res.objUrl; }
+          show("img-label", false); show("img-baked", true);
+          const t = $("img-tip"); if (t) t.textContent = "💡 กดค้างที่รูป → คัดลอก / บันทึก / แชร์ ได้รูปพร้อมรหัส";
+        }, (e) => {
+          if (current !== r || currentImg !== i) return;
+          const t = $("img-tip");
+          if (t) t.textContent = "⚠ รูปจากเว็บนี้ใส่รหัสลงในรูปไม่ได้ (" + e.message + ") — กด “เปิดรูป (มีรหัส)” แล้วแคปหน้าจอ จะได้ทั้งรูปและรหัส";
+        });
+      }
+
+      // ================= v2.3: หน้าดูรูป (#view=...) เปิดจากปุ่ม "เปิดรูป" =================
+      function renderViewer() {
+        let data;
+        try { data = JSON.parse(decodeURIComponent(location.hash.slice(6))); } catch (e) { data = null; }
+        document.body.className = "viewer";
+        document.body.innerHTML = "";
+        const wrap = document.createElement("div"); wrap.className = "viewer-wrap";
+        if (!data || !data.u) { wrap.textContent = "ลิงก์ไม่ถูกต้อง"; document.body.appendChild(wrap); return; }
+        document.title = data.l || "รูปสินค้า";
+        const img = document.createElement("img"); img.alt = data.l || ""; img.referrerPolicy = "no-referrer"; img.src = data.u;
+        const lab = document.createElement("div"); lab.className = "imglabel"; lab.textContent = data.l || "";
+        const tip = document.createElement("div"); tip.className = "tip"; tip.textContent = "⏳ กำลังใส่รหัสลงในรูป…";
+        wrap.append(img, lab, tip); document.body.appendChild(wrap);
+        composeImage(data.u, data.l || "").then((res) => {
+          img.src = res.objUrl; lab.remove();
+          tip.textContent = "💡 กดค้าง/คลิกขวาที่รูป → คัดลอก หรือบันทึกรูป (มีรหัสในรูปแล้ว)";
+        }, () => {
+          tip.textContent = "💡 แคปหน้าจอหน้านี้ จะได้ทั้งรูปและรหัส (เว็บรูปไม่อนุญาตให้ใส่รหัสลงในไฟล์รูป)";
+        });
       }
 
       // ================= ประวัติการค้น (จำไว้ในเครื่อง) =================
@@ -849,6 +989,7 @@
 
       // ================= เริ่มต้น =================
       (async () => {
+        if (location.hash.startsWith("#view=")) { renderViewer(); return; }
         renderDiag();
         diag("เปิดแอป");
         setSearchEnabled(false);

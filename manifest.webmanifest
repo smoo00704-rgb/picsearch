@@ -1,7 +1,7 @@
 {
-  "name": "ค้นรูปสินค้า - Pic Search",
-  "short_name": "ค้นรูป",
-  "description": "ค้นรูปสินค้าด้วยรหัส AMOS / AS400 จากไฟล์ลิงก์ที่เก็บไว้ในเครื่อง",
+  "name": "ค้นรูปสินค้า",
+  "short_name": "ค้นรูปสินค้า",
+  "description": "ค้นรูปสินค้าด้วยรหัส AMOS / AS400 จากไฟล์ลิงก์ที่เก็บไว้ในเครื่อง — ผู้พัฒนา: Suwanneepatt@24shopping.co.th",
   "lang": "th",
   "start_url": "./",
   "scope": "./",
@@ -10,8 +10,23 @@
   "background_color": "#f3f2fb",
   "theme_color": "#6a5cf5",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
