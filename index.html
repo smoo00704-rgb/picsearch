@@ -17,6 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!--
       PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
+      v2.5: เอาปุ่ม "คัดลอกรูป+รหัส" และ "แชร์" ออก, ปุ่มเปิดรูปเหลือคำว่า "เปิดรูป" (รูปยังมีรหัสในตัว กดค้างคัดลอก/บันทึกได้)
       v2.4: ชื่อแอปบนหน้าโฮม "ค้นรูปสินค้า", ใส่ชื่อผู้พัฒนา (Suwanneepatt@24shopping.co.th) ที่แถบบนและท้ายหน้า
       v2.3: รูปที่แสดงมีรหัสอยู่ในตัวรูป (canvas) กดค้างคัดลอก/บันทึกได้รหัสด้วย, ปุ่มคัดลอกรูป+รหัส, แชร์ไฟล์รูป, เปิดรูปในแท็บใหม่พร้อมรหัส
       v2.2: ปุ่มเลือกไฟล์เป็น <label for> (iOS), input ไม่ใช้ display:none, เคลียร์ input หลังอ่านเสร็จ, log ทุกขั้นการเลือกไฟล์
@@ -155,7 +156,7 @@
     <div class="topbar">
       <div>
         <div class="title">🔍 ค้นรูปสินค้า</div>
-        <div class="badge" id="dev-badge">v2.4 (Suwanneepatt@24shopping.co.th)</div>
+        <div class="badge" id="dev-badge">v2.5 (Suwanneepatt@24shopping.co.th)</div>
       </div>
       <div class="row">
         <button class="iconbtn hidden" id="btn-install">⬇ ติดตั้งแอป</button>
@@ -213,7 +214,7 @@
         <pre id="diag" style="font-family: var(--mono); font-size: .72rem; background: var(--panel2); border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-all; margin: 0 0 8px; user-select: text; -webkit-user-select: text"></pre>
         <button class="btn secondary" id="btn-copy-diag" style="padding: 6px 14px; font-size: .8rem">📋 คัดลอก</button>
       </details>
-      <div class="ver" id="ver">ค้นรูปสินค้า v2.4 • ผู้พัฒนา: SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)</div>
+      <div class="ver" id="ver">ค้นรูปสินค้า v2.5 • ผู้พัฒนา: SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -477,7 +478,7 @@
     </script>
     <script>
       "use strict";
-      const APP_VERSION = "2.4";
+      const APP_VERSION = "2.5";
       const $ = (id) => document.getElementById(id);
       const show = (el, on) => $(el).classList.toggle("hidden", !on);
       function setStatus(id, text, cls) { const el = $(id); el.textContent = text; el.className = "status" + (cls ? " " + cls : ""); }
@@ -803,42 +804,10 @@
 
           const actions = document.createElement("div"); actions.className = "row"; actions.style.marginTop = "10px";
           // v2.3: เปิดรูปในแท็บใหม่ = เปิดหน้าดูรูปของแอปเอง (มีรหัสติดไปด้วย) แทนการเปิดลิงก์รูปเปล่า
-          const bOpen = document.createElement("button"); bOpen.className = "btn secondary"; bOpen.textContent = "↗ เปิดรูป (มีรหัส)";
+          const bOpen = document.createElement("button"); bOpen.className = "btn secondary"; bOpen.textContent = "↗ เปิดรูป";
           bOpen.onclick = () => window.open(viewerUrl(r.images[currentImg], r.label), "_blank");
           actions.appendChild(bOpen);
 
-          // v2.3: คัดลอกรูปที่มีรหัสในตัวลงคลิปบอร์ด (วางใน LINE / Excel / อีเมลได้)
-          if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
-            const bCopy = document.createElement("button"); bCopy.className = "btn secondary"; bCopy.textContent = "📋 คัดลอกรูป+รหัส";
-            bCopy.onclick = async () => {
-              const v = getComposite(r.images[currentImg], r.label);
-              try {
-                // Safari: ต้องส่ง Promise เข้า ClipboardItem ทันทีในจังหวะที่แตะ (ห้าม await ก่อน)
-                await navigator.clipboard.write([new ClipboardItem({ "image/png": v.promise.then((x) => x.blob) })]);
-                toast("📋 คัดลอกรูปพร้อมรหัสแล้ว — ไปวางได้เลย");
-              } catch (e) {
-                diag("คัดลอกรูปไม่ได้: " + (e && e.name) + " " + (e && e.message));
-                toast(v.error && v.error.code === "CORS" ? "รูปนี้คัดลอกพร้อมรหัสไม่ได้ (เว็บรูปไม่อนุญาต) — ใช้ “เปิดรูป” แล้วแคปหน้าจอ" : "คัดลอกไม่ได้: " + (e && e.message), 4000);
-              }
-            };
-            actions.appendChild(bCopy);
-          }
-
-          // v2.3: แชร์ "ไฟล์รูปที่มีรหัส" (ถ้าทำรูปรวมได้) ไม่งั้นแชร์ลิงก์รูป + รหัส
-          if (navigator.share) {
-            const bShare = document.createElement("button"); bShare.className = "btn secondary"; bShare.textContent = "📤 แชร์";
-            bShare.onclick = async () => {
-              const u = r.images[currentImg], v = getComposite(u, r.label);
-              try {
-                if (v.result) {
-                  const file = new File([v.result.blob], safeFileName(r.label), { type: "image/png" });
-                  if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: r.label }); return; }
-                }
-                await navigator.share({ title: r.label, text: r.label, url: u });
-              } catch (e) { if (e.name !== "AbortError") toast("แชร์ไม่ได้: " + e.message); }
-            };
-            actions.appendChild(bShare);
-          }
           box.appendChild(actions);
           const tip = document.createElement("div"); tip.className = "tip"; tip.id = "img-tip";
           tip.textContent = "⏳ กำลังเตรียมรูปที่มีรหัสในตัว…";
@@ -869,7 +838,7 @@
         }, (e) => {
           if (current !== r || currentImg !== i) return;
           const t = $("img-tip");
-          if (t) t.textContent = "⚠ รูปจากเว็บนี้ใส่รหัสลงในรูปไม่ได้ (" + e.message + ") — กด “เปิดรูป (มีรหัส)” แล้วแคปหน้าจอ จะได้ทั้งรูปและรหัส";
+          if (t) t.textContent = "⚠ รูปจากเว็บนี้ใส่รหัสลงในรูปไม่ได้ (" + e.message + ") — กด “เปิดรูป” แล้วแคปหน้าจอ จะได้ทั้งรูปและรหัส";
         });
       }
 
