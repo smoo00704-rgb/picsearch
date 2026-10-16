@@ -17,6 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!--
       PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
+      v2.6: แสดงชื่อสินค้าใต้รหัสทั้งบนจอและในรูป (คอลัมน์ E ถ้าว่างใช้ D), ตัวอักษรรหัสเล็กลง, ตัดบรรทัดภาษาไทยด้วย Intl.Segmenter
       v2.5: เอาปุ่ม "คัดลอกรูป+รหัส" และ "แชร์" ออก, ปุ่มเปิดรูปเหลือคำว่า "เปิดรูป" (รูปยังมีรหัสในตัว กดค้างคัดลอก/บันทึกได้)
       v2.4: ชื่อแอปบนหน้าโฮม "ค้นรูปสินค้า", ใส่ชื่อผู้พัฒนา (Suwanneepatt@24shopping.co.th) ที่แถบบนและท้ายหน้า
       v2.3: รูปที่แสดงมีรหัสอยู่ในตัวรูป (canvas) กดค้างคัดลอก/บันทึกได้รหัสด้วย, ปุ่มคัดลอกรูป+รหัส, แชร์ไฟล์รูป, เปิดรูปในแท็บใหม่พร้อมรหัส
@@ -101,13 +102,15 @@
         max-width: 100%; max-height: 60vh; object-fit: contain;
         -webkit-touch-callout: default; /* iOS: ให้กดค้างแล้วมีเมนูบันทึกรูป */
       }
-      .imglabel { font-family: var(--mono); font-weight: 700; font-size: 1.1rem; text-align: center; word-break: break-all; }
+      .imglabel { font-family: var(--mono); font-weight: 700; font-size: .95rem; text-align: center; word-break: break-all; }
+      .imgname { font-size: .82rem; color: #4a4868; text-align: center; line-height: 1.35; max-width: 100%; word-break: break-word; }
       .baked { font-size: .74rem; color: var(--good); text-align: center; }
       /* v2.3: หน้าดูรูป (เปิดในแท็บใหม่) */
       body.viewer { background: #fff; padding: 0; }
       .viewer-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom)); }
       .viewer-wrap img { max-width: 100%; max-height: 82vh; object-fit: contain; -webkit-touch-callout: default; }
-      .viewer-wrap .imglabel { font-size: 1.6rem; }
+      .viewer-wrap .imglabel { font-size: 1.15rem; }
+      .viewer-wrap .imgname { font-size: 1rem; }
       .viewer-wrap .tip { text-align: center; }
       .thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
       .thumbs img {
@@ -156,7 +159,7 @@
     <div class="topbar">
       <div>
         <div class="title">🔍 ค้นรูปสินค้า</div>
-        <div class="badge" id="dev-badge">v2.5 (Suwanneepatt@24shopping.co.th)</div>
+        <div class="badge" id="dev-badge">v2.6 (Suwanneepatt@24shopping.co.th)</div>
       </div>
       <div class="row">
         <button class="iconbtn hidden" id="btn-install">⬇ ติดตั้งแอป</button>
@@ -214,7 +217,7 @@
         <pre id="diag" style="font-family: var(--mono); font-size: .72rem; background: var(--panel2); border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-all; margin: 0 0 8px; user-select: text; -webkit-user-select: text"></pre>
         <button class="btn secondary" id="btn-copy-diag" style="padding: 6px 14px; font-size: .8rem">📋 คัดลอก</button>
       </details>
-      <div class="ver" id="ver">ค้นรูปสินค้า v2.5 • ผู้พัฒนา: SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)</div>
+      <div class="ver" id="ver">ค้นรูปสินค้า v2.6 • ผู้พัฒนา: SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -398,7 +401,7 @@
     const stream = await entryTextStream(zip, sheetPath);
     if (!stream) throw new Error("ไม่พบข้อมูลชีต " + sheetPath + " ในไฟล์ (มี: " + [...zip.entries.keys()].filter((n) => n.includes("worksheets")).join(", ") + ")");
 
-    const wanted = new Set(["A", "B", "C"]);
+    const wanted = new Set(["A", "B", "C", "D", "E"]); // v2.6: D = ShortDescription, E = s_Note50 (ชื่อสินค้า)
     const rows = [];
     let buf = "", rowNum = 0, lastUi = 0;
     const reader = stream.getReader();
@@ -422,7 +425,11 @@
         rowNum++;
         const r = parseRowCells(rowText, wanted, shared);
         const b = r.B != null ? String(r.B).trim() : "";
-        if (b) rows.push({ a: normalizeKey(r.A), b, c: normalizeKey(r.C) });
+        if (b) {
+          // v2.6: ชื่อสินค้า ใช้คอลัมน์ E เป็นหลัก ถ้า E ว่างใช้คอลัมน์ D
+          const e = r.E != null ? String(r.E).trim() : "", d = r.D != null ? String(r.D).trim() : "";
+          rows.push({ a: normalizeKey(r.A), b, c: normalizeKey(r.C), n: e || d, nc: e ? "E" : d ? "D" : "" });
+        }
         if (onProgress && rowNum - lastUi >= 20000) { lastUi = rowNum; await onProgress(rowNum); }
       }
       if (done) break;
@@ -451,7 +458,7 @@
     return [...new Set(keys)];
   }
   function cleanCode(raw) { return normalizeKey(raw).replace(/\s+/g, ""); }
-  // คืน { col, key, images, label } หรือ null
+  // คืน { col, key, images, label, name, nameCol } หรือ null
   function search(maps, code) {
     for (const col of ["A", "C"]) {
       for (const k of lookupKeys(code, col)) {
@@ -461,7 +468,7 @@
           if (images.length) {
             // ป้ายรหัส: พบใน A -> "รหัส (ค่า C)" ; พบใน C -> "รหัส (ค่า A ตัด _0 ท้าย)"
             const other = col === "A" ? rec.c : String(rec.a || "").replace(/_0$/, "");
-            return { col, key: k, images, label: other ? code + " (" + other + ")" : code };
+            return { col, key: k, images, label: other ? code + " (" + other + ")" : code, name: rec.n || "", nameCol: rec.nc || "" };
           }
         }
       }
@@ -478,7 +485,7 @@
     </script>
     <script>
       "use strict";
-      const APP_VERSION = "2.5";
+      const APP_VERSION = "2.6";
       const $ = (id) => document.getElementById(id);
       const show = (el, on) => $(el).classList.toggle("hidden", !on);
       function setStatus(id, text, cls) { const el = $(id); el.textContent = text; el.className = "status" + (cls ? " " + cls : ""); }
@@ -569,6 +576,7 @@
         add("รหัส", "คอลัมน์ A " + m.countA.toLocaleString() + " / คอลัมน์ C " + m.countC.toLocaleString());
         if (m.fileModified) add("ไฟล์แก้ไขล่าสุด", fmtDate(m.fileModified));
         add("โหลดเข้าแอปเมื่อ", fmtDate(m.savedAt));
+        add("ชื่อสินค้า", m.hasName ? (m.nameCount || 0).toLocaleString() + " รายการ (คอลัมน์ E ถ้าว่างใช้ D)" : "⚠ ยังไม่มี — กด “อัปเดตไฟล์ลิงก์” แล้วเลือกไฟล์อีกครั้ง");
         if (m.saved === false) add("บันทึกในเครื่อง", "❌ บันทึกไม่ได้ (ใช้ได้เฉพาะรอบนี้)");
         else add("พื้นที่ถาวร", m.persisted ? "✅ ระบบจะไม่ลบอัตโนมัติ" : (isIOS && !isStandalone ? "⚠ ติดตั้งเป็นแอปก่อน ไม่งั้น Safari อาจลบเมื่อไม่ได้เปิด 7 วัน" : "⚠ ระบบอาจลบเมื่อพื้นที่เครื่องเหลือน้อย"));
         $("setup-title").textContent = "📄 ไฟล์ลิงก์รูปในเครื่อง";
@@ -624,10 +632,11 @@
             fileName: file.name, sheetName, totalRows, rowCount: rows.length,
             countA: maps.A.size, countC: maps.C.size,
             fileModified: file.lastModified || null, savedAt: Date.now(), persisted, app: APP_VERSION,
+            hasName: true, nameCount: rows.reduce((s, x) => s + (x.n ? 1 : 0), 0),
           };
           // v2.1: บันทึกลงเครื่องไม่ได้ (เช่นเปิดจากไฟล์ในเครื่อง / โหมดไม่ระบุตัวตน / พื้นที่เต็ม) ก็ยังค้นได้ในรอบนี้
           let saved = true;
-          try { await dbPut([["rows", rows.map((r) => [r.a, r.b, r.c])], ["meta", meta]]); diag("บันทึก IndexedDB สำเร็จ, persisted=" + persisted); }
+          try { await dbPut([["rows", rows.map((r) => [r.a, r.b, r.c, r.n, r.nc])], ["meta", meta]]); diag("บันทึก IndexedDB สำเร็จ, persisted=" + persisted); }
           catch (e) { saved = false; diag("❌ บันทึก IndexedDB ไม่สำเร็จ: " + (e && e.name) + " " + (e && e.message)); }
           meta.saved = saved;
           state.maps = maps; state.meta = meta;
@@ -652,7 +661,7 @@
           if (!meta) return false;
           const packed = await dbGet("rows");
           if (!packed || !packed.length) return false;
-          state.maps = PicCore.buildMaps(packed.map((x) => ({ a: x[0], b: x[1], c: x[2] })));
+          state.maps = PicCore.buildMaps(packed.map((x) => ({ a: x[0], b: x[1], c: x[2], n: x[3] || "", nc: x[4] || "" })));
           // persist อาจเปลี่ยนหลังติดตั้งเป็นแอป -> เช็กใหม่ทุกครั้ง
           try {
             if (navigator.storage && navigator.storage.persisted) {
@@ -680,6 +689,7 @@
         if (hit) {
           if (hit.col === "C") steps.push(["", "คอลัมน์ A: ไม่พบ " + keysA + " → ค้นคอลัมน์ C ต่อ"]);
           steps.push(["g", "คอลัมน์ " + hit.col + ": พบ " + hit.key + " → ใช้ลิงก์คอลัมน์ B (" + hit.images.length + " รูป)"]);
+          steps.push(["", hit.name ? "ชื่อสินค้า: จากคอลัมน์ " + hit.nameCol + (hit.nameCol === "D" ? " (คอลัมน์ E ว่าง)" : "") : "ชื่อสินค้า: คอลัมน์ E และ D ว่าง"]);
         } else {
           steps.push(["w", "คอลัมน์ A: ไม่พบ " + keysA]);
           steps.push(["w", "คอลัมน์ C: ไม่พบ " + keysC + " (หรือพบแต่คอลัมน์ B ว่าง) → ไม่พบรูป"]);
@@ -708,7 +718,48 @@
           im.src = u;
         });
       }
-      async function composeImage(url, label) {
+      // ตัดข้อความเป็นบรรทัดตามความกว้าง: ภาษาไทยไม่มีเว้นวรรคระหว่างคำ -> ใช้ Intl.Segmenter("th") ตัดเป็นคำ
+      // (Safari 14.1+/Chrome 87+) ถ้าไม่มีใช้ช่องว่าง ; คำที่ยาวเกินบรรทัดตัดทีละตัวอักษร (ไม่แยกสระ/วรรณยุกต์ออกจากพยัญชนะ)
+      function graphemes(s) {
+        if (window.Intl && Intl.Segmenter) return [...new Intl.Segmenter("th", { granularity: "grapheme" }).segment(s)].map((x) => x.segment);
+        return s.match(/[^\u0E31\u0E34-\u0E3A\u0E47-\u0E4E][\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]*/g) || [];
+      }
+      function wrapText(g, text, maxW, maxLines) {
+        const rawWords = window.Intl && Intl.Segmenter
+          ? [...new Intl.Segmenter("th", { granularity: "word" }).segment(text)].map((x) => x.segment)
+          : text.split(/(\s+)/);
+        // ไม่ให้บรรทัดขึ้นต้นด้วยเครื่องหมายปิด (เช่น "มล." แล้ว "." หลุดบรรทัด) และไม่ให้วงเล็บเปิดค้างท้ายบรรทัด
+        const words = [];
+        let pendOpen = "";
+        for (const t of rawWords) {
+          if (!t) continue;
+          if (/^[.,:;!?%)\]}…”’ๆฯ]+$/.test(t) && words.length) { words[words.length - 1] += t; continue; }
+          if (/^[(\[{“‘#]+$/.test(t)) { pendOpen += t; continue; }
+          words.push(pendOpen + t); pendOpen = "";
+        }
+        if (pendOpen) words.push(pendOpen);
+        const lines = []; let cur = "";
+        const push = (s) => { lines.push(s.trim()); };
+        for (const w of words) {
+          if (g.measureText(cur + w).width <= maxW) { cur += w; continue; }
+          if (cur.trim()) { push(cur); cur = ""; }
+          if (g.measureText(w).width <= maxW) { cur = w.replace(/^\s+/, ""); continue; }
+          for (const ch of graphemes(w)) {          // คำเดียวยาวเกินบรรทัด
+            if (g.measureText(cur + ch).width > maxW && cur) { push(cur); cur = ""; }
+            cur += ch;
+          }
+        }
+        if (cur.trim()) push(cur);
+        if (lines.length > maxLines) {
+          const keep = lines.slice(0, maxLines);
+          let last = keep[maxLines - 1];
+          while (last && g.measureText(last + "…").width > maxW) last = graphemes(last).slice(0, -1).join("");
+          keep[maxLines - 1] = last + "…";
+          return keep;
+        }
+        return lines;
+      }
+      async function composeImage(url, label, name) {
         let resp;
         try { resp = await fetch(url, { mode: "cors", credentials: "omit", referrerPolicy: "no-referrer", cache: "force-cache" }); }
         catch (e) { const err = new Error("เซิร์ฟเวอร์รูปไม่อนุญาตให้แอปอ่านรูป (CORS) หรือไม่มีเน็ต"); err.code = "CORS"; throw err; }
@@ -719,7 +770,18 @@
           if (!iw || !ih) throw new Error("ขนาดรูปไม่ถูกต้อง");
           const W = Math.round(Math.min(1200, Math.max(600, iw)));    // รูปเล็กขยายให้ตัวหนังสืออ่านง่าย / รูปใหญ่ย่อ
           const imgH = Math.round(ih * (W / iw));
-          const pad = Math.round(W * 0.03), band = Math.round(W * 0.11);
+          // v2.6: แถบล่าง = รหัส (บรรทัดแรก ตัวหนา) + ชื่อสินค้า (สูงสุด 3 บรรทัด) ตัวอักษรเล็กลงจาก v2.5
+          const pad = Math.round(W * 0.028), gap = Math.round(W * 0.01), maxTW = W - pad * 2;
+          const mono = (s) => "bold " + s + "px ui-monospace, Menlo, Consolas, 'Courier New', monospace";
+          const sans = (s) => s + "px 'Sukhumvit Set', 'Noto Sans Thai', 'Leelawadee UI', Tahoma, sans-serif";
+          const mg = document.createElement("canvas").getContext("2d");   // ใช้วัดความกว้างตัวอักษรก่อนวาดจริง
+          let codeFs = Math.round(W * 0.04);
+          mg.font = mono(codeFs);
+          while (codeFs > 10 && mg.measureText(label).width > maxTW) { codeFs -= 2; mg.font = mono(codeFs); }
+          const nameFs = Math.round(W * 0.032), lineH = Math.round(nameFs * 1.4);
+          mg.font = sans(nameFs);
+          const lines = name ? wrapText(mg, name, maxTW, 3) : [];
+          const band = pad + Math.round(codeFs * 1.25) + (lines.length ? gap + lines.length * lineH : 0) + pad;
           const c = document.createElement("canvas");
           c.width = W; c.height = imgH + band;
           const g = c.getContext("2d");
@@ -727,22 +789,23 @@
           g.imageSmoothingQuality = "high";
           g.drawImage(im, 0, 0, W, imgH);
           g.fillStyle = "#e4e1f7"; g.fillRect(0, imgH, W, Math.max(1, Math.round(W * 0.002)));
-          let fs = Math.round(band * 0.5);
-          const font = (s) => "bold " + s + "px ui-monospace, Menlo, Consolas, 'Courier New', monospace";
-          g.font = font(fs);
-          while (fs > 10 && g.measureText(label).width > W - pad * 2) { fs -= 2; g.font = font(fs); }
-          g.fillStyle = "#2b2a3d"; g.textAlign = "center"; g.textBaseline = "middle";
-          g.fillText(label, W / 2, imgH + band / 2);
+          g.textAlign = "center"; g.textBaseline = "top";
+          let y = imgH + pad;
+          g.fillStyle = "#2b2a3d"; g.font = mono(codeFs); g.fillText(label, W / 2, y);
+          y += Math.round(codeFs * 1.25) + gap;
+          g.fillStyle = "#4a4868"; g.font = sans(nameFs);
+          for (const ln of lines) { g.fillText(ln, W / 2, y); y += lineH; }
           const blob = await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("สร้างรูปไม่สำเร็จ"))), "image/png"));
           return { blob, objUrl: URL.createObjectURL(blob) };
         } finally { URL.revokeObjectURL(u); }
       }
-      function getComposite(url, label) {
-        const key = url + "\n" + label;
+      function getComposite(url, label, name) {
+        name = name || "";
+        const key = url + "\n" + label + "\n" + name;
         let v = compCache.get(key);
         if (!v) {
           v = { result: null, error: null };
-          v.promise = composeImage(url, label).then(
+          v.promise = composeImage(url, label, name).then(
             (r) => { v.result = r; diag("รวมรูป+รหัสสำเร็จ (" + Math.round(r.blob.size / 1024) + " KB)"); return r; },
             (e) => { v.error = e; diag("รวมรูป+รหัสไม่ได้: " + e.message + " | " + url.slice(0, 80)); throw e; });
           compCache.set(key, v);
@@ -750,7 +813,7 @@
         return v;
       }
       function safeFileName(s) { return String(s).replace(/[^\w\-()]+/g, "_").slice(0, 60) + ".png"; }
-      function viewerUrl(u, l) { return location.origin + location.pathname + "#view=" + encodeURIComponent(JSON.stringify({ u, l })); }
+      function viewerUrl(u, l, n) { return location.origin + location.pathname + "#view=" + encodeURIComponent(JSON.stringify({ u, l, n: n || "" })); }
 
       let current = null, currentImg = 0;
       function render(r) {
@@ -777,9 +840,12 @@
             img.replaceWith(d);
           };
           img.src = r.images[0];
-          const lab = document.createElement("div"); lab.className = "imglabel"; lab.id = "img-label"; lab.textContent = r.label;
+          const lab = document.createElement("div"); lab.id = "img-label";
+          const labCode = document.createElement("div"); labCode.className = "imglabel"; labCode.textContent = r.label;
+          lab.appendChild(labCode);
+          if (r.name) { const labName = document.createElement("div"); labName.className = "imgname"; labName.textContent = r.name; lab.appendChild(labName); }
           const baked = document.createElement("div"); baked.className = "baked hidden"; baked.id = "img-baked";
-          baked.textContent = "✅ รหัสอยู่ในรูปแล้ว — กดค้างที่รูปเพื่อคัดลอก/บันทึก จะได้รหัสไปด้วย";
+          baked.textContent = "✅ รหัส + ชื่อสินค้าอยู่ในรูปแล้ว — กดค้างที่รูปเพื่อคัดลอก/บันทึก จะได้ไปด้วย";
           imgbox.append(img, lab, baked); box.appendChild(imgbox);
           showComposite(r, 0);
 
@@ -805,7 +871,7 @@
           const actions = document.createElement("div"); actions.className = "row"; actions.style.marginTop = "10px";
           // v2.3: เปิดรูปในแท็บใหม่ = เปิดหน้าดูรูปของแอปเอง (มีรหัสติดไปด้วย) แทนการเปิดลิงก์รูปเปล่า
           const bOpen = document.createElement("button"); bOpen.className = "btn secondary"; bOpen.textContent = "↗ เปิดรูป";
-          bOpen.onclick = () => window.open(viewerUrl(r.images[currentImg], r.label), "_blank");
+          bOpen.onclick = () => window.open(viewerUrl(r.images[currentImg], r.label, r.name), "_blank");
           actions.appendChild(bOpen);
 
           box.appendChild(actions);
@@ -828,13 +894,13 @@
       }
 
       function showComposite(r, i) {
-        const u = r.images[i], v = getComposite(u, r.label);
+        const u = r.images[i], v = getComposite(u, r.label, r.name);
         v.promise.then((res) => {
           if (current !== r || currentImg !== i) return; // ผู้ใช้ค้นใหม่/เปลี่ยนรูปไปแล้ว
           const m = $("main-img");
           if (m && m.tagName === "IMG") { m.onerror = null; m.src = res.objUrl; }
           show("img-label", false); show("img-baked", true);
-          const t = $("img-tip"); if (t) t.textContent = "💡 กดค้างที่รูป → คัดลอก / บันทึก / แชร์ ได้รูปพร้อมรหัส";
+          const t = $("img-tip"); if (t) t.textContent = "💡 กดค้างที่รูป → คัดลอก / บันทึก / แชร์ ได้รูปพร้อมรหัสและชื่อสินค้า";
         }, (e) => {
           if (current !== r || currentImg !== i) return;
           const t = $("img-tip");
@@ -850,12 +916,14 @@
         document.body.innerHTML = "";
         const wrap = document.createElement("div"); wrap.className = "viewer-wrap";
         if (!data || !data.u) { wrap.textContent = "ลิงก์ไม่ถูกต้อง"; document.body.appendChild(wrap); return; }
-        document.title = data.l || "รูปสินค้า";
+        document.title = (data.l || "รูปสินค้า") + (data.n ? " " + data.n : "");
         const img = document.createElement("img"); img.alt = data.l || ""; img.referrerPolicy = "no-referrer"; img.src = data.u;
-        const lab = document.createElement("div"); lab.className = "imglabel"; lab.textContent = data.l || "";
+        const lab = document.createElement("div");
+        const labCode = document.createElement("div"); labCode.className = "imglabel"; labCode.textContent = data.l || ""; lab.appendChild(labCode);
+        if (data.n) { const labName = document.createElement("div"); labName.className = "imgname"; labName.textContent = data.n; lab.appendChild(labName); }
         const tip = document.createElement("div"); tip.className = "tip"; tip.textContent = "⏳ กำลังใส่รหัสลงในรูป…";
         wrap.append(img, lab, tip); document.body.appendChild(wrap);
-        composeImage(data.u, data.l || "").then((res) => {
+        composeImage(data.u, data.l || "", data.n || "").then((res) => {
           img.src = res.objUrl; lab.remove();
           tip.textContent = "💡 กดค้าง/คลิกขวาที่รูป → คัดลอก หรือบันทึกรูป (มีรหัสในรูปแล้ว)";
         }, () => {
@@ -978,7 +1046,9 @@
         setStatus("setup-status", "");
         if (await loadStored()) {
           renderMeta(); goSearch();
-          setStatus("search-status", "ข้อมูลไฟล์ลิงก์: " + state.meta.fileName + " (โหลดเมื่อ " + fmtDate(state.meta.savedAt) + ")");
+          if (!state.meta.hasName)
+            setStatus("search-status", "⚠ v2.6 แสดงชื่อสินค้าบนรูปได้แล้ว — กด “📄 ไฟล์ลิงก์” → “🔄 อัปเดตไฟล์ลิงก์” แล้วเลือกไฟล์ลิงก์อีกครั้ง 1 ครั้ง (ตอนนี้ค้นได้ตามปกติ แต่ยังไม่มีชื่อ)", "warn");
+          else setStatus("search-status", "ข้อมูลไฟล์ลิงก์: " + state.meta.fileName + " (โหลดเมื่อ " + fmtDate(state.meta.savedAt) + ")");
         } else {
           goSetup();
         }
