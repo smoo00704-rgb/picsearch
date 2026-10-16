@@ -17,6 +17,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <!--
       PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
+      v2.7: โหลดไฟล์มาสเตอร์ link.xlsx จากระบบอัตโนมัติ ตรวจ ETag ทุกครั้งที่เปิดแอป ดาวน์โหลดเฉพาะเมื่อไฟล์เปลี่ยน, เลือกไฟล์เองเป็นทางสำรอง
       v2.6: แสดงชื่อสินค้าใต้รหัสทั้งบนจอและในรูป (คอลัมน์ E ถ้าว่างใช้ D), ตัวอักษรรหัสเล็กลง, ตัดบรรทัดภาษาไทยด้วย Intl.Segmenter
       v2.5: เอาปุ่ม "คัดลอกรูป+รหัส" และ "แชร์" ออก, ปุ่มเปิดรูปเหลือคำว่า "เปิดรูป" (รูปยังมีรหัสในตัว กดค้างคัดลอก/บันทึกได้)
       v2.4: ชื่อแอปบนหน้าโฮม "ค้นรูปสินค้า", ใส่ชื่อผู้พัฒนา (Suwanneepatt@24shopping.co.th) ที่แถบบนและท้ายหน้า
@@ -159,7 +160,7 @@
     <div class="topbar">
       <div>
         <div class="title">🔍 ค้นรูปสินค้า</div>
-        <div class="badge" id="dev-badge">v2.6 (Suwanneepatt@24shopping.co.th)</div>
+        <div class="badge" id="dev-badge">v2.7 (Suwanneepatt@24shopping.co.th)</div>
       </div>
       <div class="row">
         <button class="iconbtn hidden" id="btn-install">⬇ ติดตั้งแอป</button>
@@ -178,15 +179,16 @@
 
       <!-- ตั้งค่าครั้งแรก / อัปเดตไฟล์ลิงก์ -->
       <div class="card hidden" id="setup">
-        <h2 id="setup-title">📄 เริ่มใช้งาน: เลือกไฟล์ลิงก์รูป</h2>
+        <h2 id="setup-title">📄 ไฟล์ลิงก์รูป</h2>
         <p class="hint" id="setup-hint">
-          เลือกไฟล์ Excel ลิงก์รูป (.xlsx) จาก OneDrive / ไฟล์ในเครื่อง <b>ครั้งเดียว</b> แอปจะเก็บข้อมูลไว้ในเครื่อง
-          ครั้งต่อไปเปิดแอปค้นได้ทันที (ไม่ต้องมีเน็ตตอนค้น) — เมื่อมีไฟล์ลิงก์ใหม่ ค่อยกด “อัปเดตไฟล์ลิงก์”
+          แอปโหลดไฟล์ลิงก์รูป (ไฟล์มาสเตอร์) จากระบบให้อัตโนมัติ และตรวจอัปเดตทุกครั้งที่เปิดแอปตอนมีเน็ต
+          — ข้อมูลเก็บไว้ในเครื่อง ค้นได้แม้ไม่มีเน็ต
         </p>
         <dl class="meta hidden" id="meta"></dl>
         <div class="row">
           <!-- v2.2: ใช้ <label for> แตะแล้ว iOS เปิดตัวเลือกไฟล์เองโดยตรง ไม่ต้องผ่าน input.click() จาก JS -->
-          <label class="btn" id="btn-pick" for="f-link" role="button">📄 เลือกไฟล์ลิงก์ (.xlsx)</label>
+          <button class="btn" id="btn-sync">🔄 ตรวจอัปเดตไฟล์ลิงก์</button>
+          <label class="btn secondary" id="btn-pick" for="f-link" role="button">📄 เลือกไฟล์เอง (สำรอง)</label>
           <button class="btn secondary hidden" id="btn-close-setup">กลับไปค้นหา</button>
         </div>
         <!-- v2.2: ซ่อนแบบมองไม่เห็นแต่ยังอยู่ใน layout (display:none ทำให้ iOS บางรุ่นไม่เปิดตัวเลือกไฟล์) -->
@@ -217,7 +219,7 @@
         <pre id="diag" style="font-family: var(--mono); font-size: .72rem; background: var(--panel2); border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-all; margin: 0 0 8px; user-select: text; -webkit-user-select: text"></pre>
         <button class="btn secondary" id="btn-copy-diag" style="padding: 6px 14px; font-size: .8rem">📋 คัดลอก</button>
       </details>
-      <div class="ver" id="ver">ค้นรูปสินค้า v2.6 • ผู้พัฒนา: SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)</div>
+      <div class="ver" id="ver">ค้นรูปสินค้า v2.7 • ผู้พัฒนา: SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)</div>
     </div>
 
     <div class="toast" id="toast"></div>
@@ -485,7 +487,7 @@
     </script>
     <script>
       "use strict";
-      const APP_VERSION = "2.6";
+      const APP_VERSION = "2.7";
       const $ = (id) => document.getElementById(id);
       const show = (el, on) => $(el).classList.toggle("hidden", !on);
       function setStatus(id, text, cls) { const el = $(id); el.textContent = text; el.className = "status" + (cls ? " " + cls : ""); }
@@ -572,21 +574,21 @@
         if (!m) return;
         $("meta").innerHTML = "";
         const add = (k, v) => { const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = v; $("meta").append(dt, dd); };
+        add("ที่มา", m.source === "master" ? "☁ ไฟล์มาสเตอร์จากระบบ (อัปเดตอัตโนมัติ)" : "📄 เลือกไฟล์เอง");
         add("ไฟล์", m.fileName + " [" + m.sheetName + "]");
         add("รหัส", "คอลัมน์ A " + m.countA.toLocaleString() + " / คอลัมน์ C " + m.countC.toLocaleString());
-        if (m.fileModified) add("ไฟล์แก้ไขล่าสุด", fmtDate(m.fileModified));
+        if (m.fileModified) add(m.source === "master" ? "ไฟล์มาสเตอร์อัปโหลดเมื่อ" : "ไฟล์แก้ไขล่าสุด", fmtDate(m.fileModified));
+        if (m.lastCheck) add("ตรวจอัปเดตล่าสุด", fmtDate(m.lastCheck));
         add("โหลดเข้าแอปเมื่อ", fmtDate(m.savedAt));
-        add("ชื่อสินค้า", m.hasName ? (m.nameCount || 0).toLocaleString() + " รายการ (คอลัมน์ E ถ้าว่างใช้ D)" : "⚠ ยังไม่มี — กด “อัปเดตไฟล์ลิงก์” แล้วเลือกไฟล์อีกครั้ง");
+        add("ชื่อสินค้า", m.hasName ? (m.nameCount || 0).toLocaleString() + " รายการ (คอลัมน์ E ถ้าว่างใช้ D)" : "⚠ ยังไม่มี — กด “ตรวจอัปเดตไฟล์ลิงก์”");
         if (m.saved === false) add("บันทึกในเครื่อง", "❌ บันทึกไม่ได้ (ใช้ได้เฉพาะรอบนี้)");
         else add("พื้นที่ถาวร", m.persisted ? "✅ ระบบจะไม่ลบอัตโนมัติ" : (isIOS && !isStandalone ? "⚠ ติดตั้งเป็นแอปก่อน ไม่งั้น Safari อาจลบเมื่อไม่ได้เปิด 7 วัน" : "⚠ ระบบอาจลบเมื่อพื้นที่เครื่องเหลือน้อย"));
         $("setup-title").textContent = "📄 ไฟล์ลิงก์รูปในเครื่อง";
-        $("setup-hint").textContent = "ข้อมูลไฟล์ลิงก์เก็บอยู่ในเครื่องนี้แล้ว — เมื่อมีไฟล์ลิงก์ใหม่ใน Shared Drive ให้กด “อัปเดตไฟล์ลิงก์” แล้วเลือกไฟล์ใหม่";
-        $("btn-pick").textContent = "🔄 อัปเดตไฟล์ลิงก์";
       }
       function setSearchEnabled(on) {
         $("code").disabled = !on; $("btn-search").disabled = !on;
-        $("code").placeholder = on ? "รหัส AMOS / AS400" : "เลือกไฟล์ลิงก์ก่อน แล้วจึงค้นได้";
-        if (!on) setStatus("search-status", "⚠ ยังค้นหาไม่ได้ — เลือกไฟล์ลิงก์รูปด้านบนก่อน", "warn");
+        $("code").placeholder = on ? "รหัส AMOS / AS400" : "รอโหลดไฟล์ลิงก์…";
+        if (!on) setStatus("search-status", "⏳ ยังค้นหาไม่ได้ — รอโหลดไฟล์ลิงก์ (ด้านบน)", "warn");
       }
       function goSearch() {
         show("setup", false); setSearchEnabled(true);
@@ -599,8 +601,10 @@
       }
 
       // ================= เลือก/อ่านไฟล์ลิงก์ -> เก็บในเครื่อง =================
-      async function importFile(file) {
-        diag("เลือกไฟล์: " + file.name + " | " + file.size.toLocaleString() + " bytes | type=" + (file.type || "-"));
+      // opts: { source: "master" | "manual", tag, auto }  (auto = โหลดเบื้องหลังตอนผู้ใช้อยู่หน้าค้นหา)
+      async function importFile(file, opts) {
+        opts = opts || { source: "manual" };
+        diag((opts.source === "master" ? "ไฟล์มาสเตอร์: " : "เลือกไฟล์: ") + file.name + " | " + file.size.toLocaleString() + " bytes | type=" + (file.type || "-"));
         // ตรวจจากเนื้อไฟล์ (ZIP ขึ้นต้นด้วย "PK") แทนนามสกุล - ไฟล์จาก OneDrive/Drive บางครั้งชื่อไม่มี .xlsx
         let sig = "";
         try { sig = String.fromCharCode(...new Uint8Array(await file.slice(0, 2).arrayBuffer())); }
@@ -610,12 +614,13 @@
           const hint = /\.xls$/i.test(file.name) ? " (ไฟล์ .xls รุ่นเก่า ให้เปิดใน Excel แล้ว Save As เป็น .xlsx)" : /\.csv$/i.test(file.name) ? " (ไฟล์ .csv ให้ Save As เป็น .xlsx)" : "";
           setStatus("setup-status", "❌ ไม่ใช่ไฟล์ .xlsx: " + file.name + hint, "bad"); diag("signature ไม่ใช่ PK: " + JSON.stringify(sig)); return;
         }
-        state.busy = true; $("btn-pick").classList.add("disabled"); $("progress").style.display = "block";
+        state.busy = true; $("btn-pick").classList.add("disabled"); $("btn-sync").disabled = true; $("progress").style.display = "block";
         setStatus("setup-status", "📄 กำลังอ่าน " + file.name + " ...", "warn");
         try {
           const t0 = performance.now();
           const { rows, sheetName, totalRows } = await PicCore.readLinkFile(file, async (n) => {
             setStatus("setup-status", "📄 กำลังอ่าน " + file.name + " (" + n.toLocaleString() + " แถว)", "warn");
+            if (opts.auto) setStatus("search-status", "🔄 กำลังอัปเดตไฟล์ลิงก์ (" + n.toLocaleString() + " แถว) — ระหว่างนี้ค้นด้วยข้อมูลเดิมได้", "warn");
             await new Promise((r) => setTimeout(r, 0)); // ให้หน้าจอได้อัปเดตตัวเลข
           });
           if (!rows.length) throw new Error("ชีต " + sheetName + " ไม่มีแถวที่มีลิงก์รูปในคอลัมน์ B");
@@ -633,6 +638,7 @@
             countA: maps.A.size, countC: maps.C.size,
             fileModified: file.lastModified || null, savedAt: Date.now(), persisted, app: APP_VERSION,
             hasName: true, nameCount: rows.reduce((s, x) => s + (x.n ? 1 : 0), 0),
+            source: opts.source || "manual", masterTag: opts.tag || null, lastCheck: opts.source === "master" ? Date.now() : null,
           };
           // v2.1: บันทึกลงเครื่องไม่ได้ (เช่นเปิดจากไฟล์ในเครื่อง / โหมดไม่ระบุตัวตน / พื้นที่เต็ม) ก็ยังค้นได้ในรอบนี้
           let saved = true;
@@ -644,15 +650,68 @@
           const secs = ((performance.now() - t0) / 1000).toFixed(1);
           if (saved) setStatus("setup-status", "✅ บันทึกในเครื่องแล้ว " + rows.length.toLocaleString() + " แถว (" + secs + " วินาที)", "ok");
           else setStatus("setup-status", "⚠ อ่านไฟล์สำเร็จ ค้นได้แล้ว แต่เครื่องนี้บันทึกข้อมูลไว้ไม่ได้ — ปิดแอปแล้วต้องเลือกไฟล์ใหม่ (ดูสาเหตุใน “ข้อมูลสำหรับแจ้งปัญหา”)", "warn");
-          toast("✅ พร้อมค้นหาแล้ว");
-          setTimeout(goSearch, 700);
+          if (opts.auto) {
+            setStatus("search-status", "✅ อัปเดตไฟล์ลิงก์แล้ว (" + rows.length.toLocaleString() + " แถว • ไฟล์อัปโหลดเมื่อ " + fmtDate(meta.fileModified || meta.savedAt) + ")", "ok");
+            toast("✅ อัปเดตไฟล์ลิงก์ล่าสุดแล้ว");
+          } else { toast("✅ พร้อมค้นหาแล้ว"); setTimeout(goSearch, 700); }
         } catch (e) {
           console.error(e);
           diag("❌ อ่านไฟล์ไม่สำเร็จ: " + e.message + (e.cause && e.cause.name ? " (" + e.cause.name + ")" : "") + (e.stack ? "\n" + String(e.stack).split("\n").slice(0, 4).join("\n") : ""));
           setStatus("setup-status", "❌ อ่าน/บันทึกไฟล์ไม่สำเร็จ: " + e.message + (state.maps ? " — ยังใช้ข้อมูลเดิมค้นได้ตามปกติ" : ""), "bad");
+          if (opts.auto) setStatus("search-status", "⚠ อัปเดตไฟล์ลิงก์ไม่สำเร็จ — ยังค้นด้วยข้อมูลเดิมได้ (" + e.message + ")", "warn");
         } finally {
-          state.busy = false; $("btn-pick").classList.remove("disabled"); $("progress").style.display = "none";
+          state.busy = false; $("btn-pick").classList.remove("disabled"); $("btn-sync").disabled = false; $("progress").style.display = "none";
         }
+      }
+
+      // ================= v2.7: ไฟล์มาสเตอร์บนระบบ (link.xlsx ข้าง index.html) =================
+      // ตรวจด้วย HEAD เทียบ ETag/Last-Modified กับที่เก็บไว้ -> ดาวน์โหลดเฉพาะเมื่อไฟล์เปลี่ยน
+      const MASTER_URL = "link.xlsx";
+      let syncing = false;
+      async function syncMaster(manual) {
+        if (syncing || state.busy) return;
+        if (!/^https?:$/.test(location.protocol)) { if (manual) setStatus("setup-status", "⚠ เปิดจากไฟล์ในเครื่อง — โหลดไฟล์มาสเตอร์ไม่ได้ ใช้ “เลือกไฟล์เอง”", "warn"); return; }
+        if (!navigator.onLine) {
+          diag("ไม่มีเน็ต — ข้ามการตรวจไฟล์มาสเตอร์");
+          if (manual) setStatus("setup-status", "📴 ไม่มีอินเทอร์เน็ต — ใช้ข้อมูลเดิมในเครื่อง", "warn");
+          if (!state.maps) setStatus("setup-status", "📴 ไม่มีอินเทอร์เน็ต — ต่อเน็ตแล้วเปิดแอปใหม่ เพื่อโหลดไฟล์ลิงก์ครั้งแรก", "bad");
+          return;
+        }
+        syncing = true;
+        const auto = !!state.maps;
+        try {
+          if (!auto) setStatus("setup-status", "☁ กำลังตรวจไฟล์ลิงก์จากระบบ…", "warn");
+          let head;
+          try { head = await fetch(MASTER_URL, { method: "HEAD", cache: "no-store" }); }
+          catch (e) { diag("ตรวจไฟล์มาสเตอร์ไม่ได้: " + e.message); if (!auto) setStatus("setup-status", "❌ เชื่อมต่อระบบไม่ได้ — ลองใหม่ หรือใช้ “เลือกไฟล์เอง”", "bad"); return; }
+          if (head.status === 404) {
+            diag("ไม่พบไฟล์มาสเตอร์ (" + MASTER_URL + ") บนระบบ");
+            if (!auto || manual) setStatus("setup-status", "⚠ ยังไม่มีไฟล์มาสเตอร์บนระบบ — ใช้ “เลือกไฟล์เอง” ไปก่อน", "warn");
+            return;
+          }
+          if (!head.ok) { diag("ตรวจไฟล์มาสเตอร์: HTTP " + head.status); if (!auto) setStatus("setup-status", "❌ ตรวจไฟล์ไม่ได้ (HTTP " + head.status + ")", "bad"); return; }
+          const lm = head.headers.get("last-modified");
+          const tag = head.headers.get("etag") || lm || head.headers.get("content-length") || "";
+          diag("ไฟล์มาสเตอร์: tag=" + tag + " | ในเครื่อง=" + (state.meta && state.meta.masterTag));
+          if (state.meta && state.meta.masterTag && state.meta.masterTag === tag && state.meta.hasName) {
+            state.meta.lastCheck = Date.now(); renderMeta();
+            try { await dbPut([["meta", state.meta]]); } catch (e) {}
+            if (manual) setStatus("setup-status", "✅ ไฟล์ลิงก์ในเครื่องเป็นเวอร์ชันล่าสุดแล้ว", "ok");
+            return;
+          }
+          if (!auto) setStatus("setup-status", "☁ กำลังดาวน์โหลดไฟล์ลิงก์จากระบบ…", "warn");
+          else setStatus("search-status", "☁ พบไฟล์ลิงก์ใหม่ กำลังดาวน์โหลด — ระหว่างนี้ค้นด้วยข้อมูลเดิมได้", "warn");
+          const res = await fetch(MASTER_URL, { cache: "no-store" });
+          if (!res.ok) throw new Error("ดาวน์โหลดไม่สำเร็จ (HTTP " + res.status + ")");
+          const blob = await res.blob();
+          const lm2 = res.headers.get("last-modified") || lm;
+          const file = new File([blob], MASTER_URL, { lastModified: (lm2 && Date.parse(lm2)) || Date.now() });
+          await importFile(file, { source: "master", tag: res.headers.get("etag") || tag, auto });
+        } catch (e) {
+          diag("❌ ไฟล์มาสเตอร์: " + e.message);
+          if (auto) setStatus("search-status", "⚠ อัปเดตไฟล์ลิงก์ไม่สำเร็จ — ยังค้นด้วยข้อมูลเดิมได้", "warn");
+          else setStatus("setup-status", "❌ " + e.message + " — ลองใหม่ หรือใช้ “เลือกไฟล์เอง”", "bad");
+        } finally { syncing = false; }
       }
 
       async function loadStored() {
@@ -991,6 +1050,15 @@
         setStatus("setup-status", "ลบข้อมูลแล้ว", "ok");
       });
 
+      $("btn-sync").addEventListener("click", () => syncMaster(true));
+      // กลับมาเปิดแอปที่ค้างไว้ (iOS/Android ไม่ได้โหลดหน้าใหม่) -> ตรวจอัปเดตถ้าห่างจากครั้งก่อนเกิน 30 นาที
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState !== "visible" || location.hash.startsWith("#view=")) return;
+        const last = (state.meta && state.meta.lastCheck) || 0;
+        if (Date.now() - last > 30 * 60 * 1000) syncMaster(false);
+      });
+      window.addEventListener("online", () => { if (!state.maps) syncMaster(false); });
+
       $("btn-copy-diag").addEventListener("click", async () => {
         const txt = $("diag").textContent;
         try { await navigator.clipboard.writeText(txt); toast("📋 คัดลอกแล้ว"); }
@@ -1046,12 +1114,11 @@
         setStatus("setup-status", "");
         if (await loadStored()) {
           renderMeta(); goSearch();
-          if (!state.meta.hasName)
-            setStatus("search-status", "⚠ v2.6 แสดงชื่อสินค้าบนรูปได้แล้ว — กด “📄 ไฟล์ลิงก์” → “🔄 อัปเดตไฟล์ลิงก์” แล้วเลือกไฟล์ลิงก์อีกครั้ง 1 ครั้ง (ตอนนี้ค้นได้ตามปกติ แต่ยังไม่มีชื่อ)", "warn");
-          else setStatus("search-status", "ข้อมูลไฟล์ลิงก์: " + state.meta.fileName + " (โหลดเมื่อ " + fmtDate(state.meta.savedAt) + ")");
+          setStatus("search-status", "ข้อมูลไฟล์ลิงก์: " + state.meta.fileName + " (" + fmtDate(state.meta.fileModified || state.meta.savedAt) + ")");
         } else {
           goSetup();
         }
+        syncMaster(false); // v2.7: ตรวจ/โหลดไฟล์มาสเตอร์ทุกครั้งที่เปิดแอป
       })();
     </script>
   </body>

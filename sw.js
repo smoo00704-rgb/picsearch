@@ -3,7 +3,7 @@
  * - รูปสินค้า (ข้ามโดเมน) ไม่แคชเอง ปล่อยเบราว์เซอร์จัดการตามปกติ
  * - แก้ไฟล์แอปเมื่อไร ให้เปลี่ยน CACHE (เช่น v2.1) เพื่อให้เครื่องผู้ใช้โหลดเวอร์ชันใหม่
  */
-const CACHE = "picsearch-app-v2.6";
+const CACHE = "picsearch-app-v2.7";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/apple-touch-icon.png"];
 
@@ -18,7 +18,9 @@ self.addEventListener("activate", (e) => {
 // ไฟล์ของแอปเอง: network-first (ได้เวอร์ชันล่าสุดเมื่อมีเน็ต) -> ไม่มีเน็ตใช้จากแคช
 self.addEventListener("fetch", (e) => {
   const req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
+  const u = new URL(req.url);
+  if (req.method !== "GET" || u.origin !== self.location.origin) return;
+  if (u.pathname.endsWith(".xlsx")) return; // v2.7: ไฟล์มาสเตอร์ ไม่แคชใน SW (แอปเก็บข้อมูลที่อ่านแล้วใน IndexedDB เอง)
   e.respondWith(
     fetch(req).then((res) => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
