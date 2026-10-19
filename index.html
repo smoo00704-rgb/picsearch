@@ -29,6 +29,7 @@
     />
     <!--
       PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
+      v2.11 (19 ต.ค. 2569): เพิ่มกล่อง "รายละเอียด" แบบหน้าเว็บต่อจากปุ่มเปิดรูป — ขนาดสินค้ารวมบรรจุภัณฑ์ (G Dimension), น้ำหนักรวมบรรจุภัณฑ์ (H WeightDetail), ชื่อสินค้า (D ShortDescription), แบรนด์ (F Brand) ; ปัดทศนิยมยาวเหลือ 3 ตำแหน่ง ; ข้อมูลในเครื่องเวอร์ชันก่อนจะโหลดไฟล์มาสเตอร์ใหม่ 1 ครั้ง
       v2.10 (19 ต.ค. 2569): เปลี่ยนคำเรียกบนหน้าจอจาก "คอลัมน์ A / C" เป็น "Amos / PDM" (ป้ายผลค้นหา, รายละเอียดการค้น, จำนวนรหัสในเมนูไฟล์ลิงก์) ; ข้อความ "ไม่พบรหัสสินค้านี้ทั้ง Amos และ PDM" แก้โดยผู้พัฒนา
       v2.9 (19 ต.ค. 2569): ประวัติการค้น (รหัสที่จำไว้) ล้างอัตโนมัติทุกวันใหม่ — เก็บ {day, items} ใน localStorage, เช็กวันเมื่อเปิด/กลับมาที่แอป/ก่อนบันทึก
       v2.8: แก้ป้ายอีเมลผู้พัฒนาที่แถบบนถูกตัดคำเมื่อปุ่มติดตั้งแสดง (Android) — ไม่ตัดบรรทัด, ปุ่มด้านขวาเรียงแนวตั้ง
@@ -286,6 +287,22 @@
         text-align: center;
         word-break: break-all;
       }
+      /* v2.11: รายละเอียดสินค้า (แบบหน้าเว็บ) */
+      .pdetail { margin-top: 14px; }
+      .pdetail-tab {
+        display: inline-block; background: #00c300; color: #fff; font-weight: 700;
+        font-size: 0.9rem; padding: 6px 26px;
+      }
+      .pdetail-rows { border-top: 2px solid #00c300; }
+      .pdetail-row {
+        display: grid; grid-template-columns: 12.5em 1fr; gap: 12px;
+        padding: 10px 2px; border-bottom: 1px solid #e6e6e6; font-size: 0.86rem;
+      }
+      .pdetail-k { font-weight: 700; color: #3c4858; white-space: nowrap; }
+      .pdetail-v { color: #4a5563; word-break: break-word; }
+      .pdetail-title { font-weight: 700; color: #3c4858; font-size: 0.9rem; margin-top: 12px; line-height: 1.4; }
+      .pdetail-brand { color: #6b7280; font-size: 0.86rem; margin-top: 6px; }
+      .pdetail-brand b { color: #3c4858; }
       .imgname {
         font-size: 0.82rem;
         color: #4a4868;
@@ -498,7 +515,7 @@
       <div>
         <div class="title">🔍 ค้นรูปสินค้า</div>
         <div class="badge" id="dev-badge">
-          v2.10 (Suwanneepatt@24shopping.co.th)
+          v2.11 (Suwanneepatt@24shopping.co.th)
         </div>
       </div>
       <div class="row">
@@ -622,7 +639,7 @@
         </button>
       </details>
       <div class="ver" id="ver">
-        ค้นรูปสินค้า v2.10 • ผู้พัฒนา: SUWANNEE PATTISITIWONG
+        ค้นรูปสินค้า v2.11 • ผู้พัฒนา: SUWANNEE PATTISITIWONG
         (Suwanneepatt@24shopping.co.th)
       </div>
     </div>
@@ -907,7 +924,7 @@
                 ")",
             );
 
-          const wanted = new Set(["A", "B", "C", "D", "E"]); // v2.6: D = ShortDescription, E = s_Note50 (ชื่อสินค้า)
+          const wanted = new Set(["A", "B", "C", "D", "E", "F", "G", "H"]); // v2.6: D = ShortDescription, E = s_Note50 (ชื่อสินค้า) ; v2.11: F = Brand, G = Dimension, H = WeightDetail
           const rows = [];
           let buf = "",
             rowNum = 0,
@@ -949,6 +966,9 @@
               rowNum++;
               const r = parseRowCells(rowText, wanted, shared);
               const b = r.B != null ? String(r.B).trim() : "";
+              const cellText = (v) => (v != null ? String(v).trim() : "");
+              // v2.11: ตัวเลขทศนิยมยาวจาก Excel (เช่น 0.754666666666667) ปัดเหลือไม่เกิน 3 ตำแหน่ง
+              const cleanNum = (s) => s.replace(/\d+\.\d{4,}/g, (m) => String(parseFloat(Number(m).toFixed(3))));
               if (b) {
                 // v2.6: ชื่อสินค้า ใช้คอลัมน์ E เป็นหลัก ถ้า E ว่างใช้คอลัมน์ D
                 const e = r.E != null ? String(r.E).trim() : "",
@@ -959,6 +979,11 @@
                   c: normalizeKey(r.C),
                   n: e || d,
                   nc: e ? "E" : d ? "D" : "",
+                  // v2.11: รายละเอียดสินค้า (แบบหน้าเว็บ) — dn = ชื่อจาก D เก็บเฉพาะเมื่อชื่อหลักมาจาก E (ประหยัดพื้นที่)
+                  dn: e && d ? d : "",
+                  br: cellText(r.F),
+                  dim: cleanNum(cellText(r.G)),
+                  wt: cleanNum(cellText(r.H)),
                 });
               }
               if (onProgress && rowNum - lastUi >= 20000) {
@@ -1018,6 +1043,13 @@
                     label: other ? code + " (" + other + ")" : code,
                     name: rec.n || "",
                     nameCol: rec.nc || "",
+                    // v2.11: รายละเอียดสินค้า — หัวข้อใช้ชื่อจาก D (ShortDescription แบบหน้าเว็บ) ถ้าไม่มีใช้ชื่อหลัก
+                    detail: {
+                      title: rec.dn || rec.n || "",
+                      brand: rec.br || "",
+                      dim: rec.dim || "",
+                      wt: rec.wt || "",
+                    },
                   };
                 }
               }
@@ -1046,7 +1078,7 @@
     </script>
     <script>
       "use strict";
-      const APP_VERSION = "2.10";
+      const APP_VERSION = "2.11";
       // v2.10: ชื่อเรียกรหัสบนหน้าจอ — คอลัมน์ A = รหัส Amos, คอลัมน์ C = รหัส PDM
       const COL_NAME = { A: "Amos", C: "PDM" };
       const $ = (id) => document.getElementById(id);
@@ -1412,6 +1444,7 @@
             persisted,
             app: APP_VERSION,
             hasName: true,
+            hasDetail: true, // v2.11
             nameCount: rows.reduce((s, x) => s + (x.n ? 1 : 0), 0),
             source: opts.source || "manual",
             masterTag: opts.tag || null,
@@ -1421,7 +1454,7 @@
           let saved = true;
           try {
             await dbPut([
-              ["rows", rows.map((r) => [r.a, r.b, r.c, r.n, r.nc])],
+              ["rows", rows.map((r) => [r.a, r.b, r.c, r.n, r.nc, r.dn, r.br, r.dim, r.wt])],
               ["meta", meta],
             ]);
             diag("บันทึก IndexedDB สำเร็จ, persisted=" + persisted);
@@ -1591,7 +1624,8 @@
             state.meta &&
             state.meta.masterTag &&
             state.meta.masterTag === tag &&
-            state.meta.hasName
+            state.meta.hasName &&
+            state.meta.hasDetail // v2.11: ข้อมูลในเครื่องจากเวอร์ชันก่อนยังไม่มีรายละเอียด -> โหลดใหม่ 1 ครั้ง
           ) {
             state.meta.lastCheck = Date.now();
             renderMeta();
@@ -1663,6 +1697,10 @@
               c: x[2],
               n: x[3] || "",
               nc: x[4] || "",
+              dn: x[5] || "",
+              br: x[6] || "",
+              dim: x[7] || "",
+              wt: x[8] || "",
             })),
           );
           // persist อาจเปลี่ยนหลังติดตั้งเป็นแอป -> เช็กใหม่ทุกครั้ง
@@ -2078,6 +2116,50 @@
           actions.appendChild(bOpen);
 
           box.appendChild(actions);
+          // v2.11: กล่องรายละเอียดสินค้า (หน้าตาแบบหน้าเว็บ ALL ONLINE) ต่อจากปุ่มเปิดรูป
+          const dt = r.detail || {};
+          if (dt.title || dt.brand || dt.dim || dt.wt) {
+            const dbox = document.createElement("div");
+            dbox.className = "pdetail";
+            const tab = document.createElement("div");
+            tab.className = "pdetail-tab";
+            tab.textContent = "รายละเอียด";
+            dbox.appendChild(tab);
+            const rowsEl = document.createElement("div");
+            rowsEl.className = "pdetail-rows";
+            const addRow = (k, v) => {
+              if (!v) return;
+              const rw = document.createElement("div");
+              rw.className = "pdetail-row";
+              const kk = document.createElement("div");
+              kk.className = "pdetail-k";
+              kk.textContent = k;
+              const vv = document.createElement("div");
+              vv.className = "pdetail-v";
+              vv.textContent = v;
+              rw.append(kk, vv);
+              rowsEl.appendChild(rw);
+            };
+            addRow("ขนาดสินค้ารวมบรรจุภัณฑ์", dt.dim);
+            addRow("น้ำหนักรวมบรรจุภัณฑ์", dt.wt);
+            dbox.appendChild(rowsEl);
+            if (dt.title) {
+              const t = document.createElement("div");
+              t.className = "pdetail-title";
+              t.textContent = dt.title;
+              dbox.appendChild(t);
+            }
+            if (dt.brand) {
+              const bd = document.createElement("div");
+              bd.className = "pdetail-brand";
+              bd.append("แบรนด์ : ");
+              const bb = document.createElement("b");
+              bb.textContent = dt.brand;
+              bd.appendChild(bb);
+              dbox.appendChild(bd);
+            }
+            box.appendChild(dbox);
+          }
           const tip = document.createElement("div");
           tip.className = "tip";
           tip.id = "img-tip";
