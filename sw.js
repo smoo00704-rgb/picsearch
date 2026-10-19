@@ -3,7 +3,7 @@
  * - รูปสินค้า (ข้ามโดเมน) ไม่แคชเอง ปล่อยเบราว์เซอร์จัดการตามปกติ
  * - แก้ไฟล์แอปเมื่อไร ให้เปลี่ยน CACHE (เช่น v2.1) เพื่อให้เครื่องผู้ใช้โหลดเวอร์ชันใหม่
  */
-const CACHE = "picsearch-app-v2.11";
+const CACHE = "picsearch-app-v2.12";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-512.png", "./icons/apple-touch-icon.png"];
 
