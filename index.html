@@ -29,6 +29,7 @@
     />
     <!--
       PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
+      v2.9 (19 ต.ค. 2569): ประวัติการค้น (รหัสที่จำไว้) ล้างอัตโนมัติทุกวันใหม่ — เก็บ {day, items} ใน localStorage, เช็กวันเมื่อเปิด/กลับมาที่แอป/ก่อนบันทึก
       v2.8: แก้ป้ายอีเมลผู้พัฒนาที่แถบบนถูกตัดคำเมื่อปุ่มติดตั้งแสดง (Android) — ไม่ตัดบรรทัด, ปุ่มด้านขวาเรียงแนวตั้ง
       v2.7: โหลดไฟล์มาสเตอร์ link.xlsx จากระบบอัตโนมัติ ตรวจ ETag ทุกครั้งที่เปิดแอป ดาวน์โหลดเฉพาะเมื่อไฟล์เปลี่ยน, เลือกไฟล์เองเป็นทางสำรอง
       v2.6: แสดงชื่อสินค้าใต้รหัสทั้งบนจอและในรูป (คอลัมน์ E ถ้าว่างใช้ D), ตัวอักษรรหัสเล็กลง, ตัดบรรทัดภาษาไทยด้วย Intl.Segmenter
@@ -496,7 +497,7 @@
       <div>
         <div class="title">🔍 ค้นรูปสินค้า</div>
         <div class="badge" id="dev-badge">
-          v2.8 (Suwanneepatt@24shopping.co.th)
+          v2.9 (Suwanneepatt@24shopping.co.th)
         </div>
       </div>
       <div class="row">
@@ -620,7 +621,7 @@
         </button>
       </details>
       <div class="ver" id="ver">
-        ค้นรูปสินค้า v2.8 • ผู้พัฒนา: SUWANNEE PATTISITIWONG
+        ค้นรูปสินค้า v2.9 • ผู้พัฒนา: SUWANNEE PATTISITIWONG
         (Suwanneepatt@24shopping.co.th)
       </div>
     </div>
@@ -1044,7 +1045,7 @@
     </script>
     <script>
       "use strict";
-      const APP_VERSION = "2.8";
+      const APP_VERSION = "2.9";
       const $ = (id) => document.getElementById(id);
       const show = (el, on) => $(el).classList.toggle("hidden", !on);
       function setStatus(id, text, cls) {
@@ -2189,13 +2190,40 @@
       }
 
       // ================= ประวัติการค้น (จำไว้ในเครื่อง) =================
+      // v2.9: ประวัติการค้นเก็บเฉพาะของ "วันนี้" — ขึ้นวันใหม่ (ตามเวลาเครื่อง) ล้างอัตโนมัติ
+      // รูปแบบที่เก็บ: { day: "YYYY-MM-DD", items: [{code, found}] } ; รูปแบบเก่า (array เปล่า) ถือว่าเป็นของวันก่อน -> ล้าง
       const HIST_KEY = "picSearchHistory";
+      function todayKey() {
+        const d = new Date();
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      }
+      let historyDay = todayKey();
       let history = [];
       try {
-        history = JSON.parse(localStorage.getItem(HIST_KEY) || "[]");
+        const saved = JSON.parse(localStorage.getItem(HIST_KEY) || "null");
+        if (saved && !Array.isArray(saved) && saved.day === historyDay && Array.isArray(saved.items)) history = saved.items;
+        else localStorage.removeItem(HIST_KEY);
       } catch (e) {
         history = [];
       }
+      function saveHistory() {
+        try {
+          localStorage.setItem(HIST_KEY, JSON.stringify({ day: historyDay, items: history }));
+        } catch (e) {}
+      }
+      // แอปเปิดค้างข้ามเที่ยงคืน: เช็กทุกครั้งที่กลับมาเปิดแอป และก่อนบันทึกรหัสใหม่
+      function rollHistoryDay() {
+        const t = todayKey();
+        if (t === historyDay) return false;
+        historyDay = t;
+        history = [];
+        try { localStorage.removeItem(HIST_KEY); } catch (e) {}
+        renderHistory();
+        return true;
+      }
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") rollHistoryDay();
+      });
       function renderHistory() {
         const box = $("history");
         box.innerHTML = "";
@@ -2211,12 +2239,11 @@
         });
       }
       function addHistory(r) {
+        rollHistoryDay();
         history = history.filter((h) => h.code !== r.code);
         history.unshift({ code: r.code, found: r.found });
         if (history.length > 15) history.length = 15;
-        try {
-          localStorage.setItem(HIST_KEY, JSON.stringify(history));
-        } catch (e) {}
+        saveHistory();
         renderHistory();
       }
 
