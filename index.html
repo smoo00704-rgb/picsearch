@@ -2,10 +2,19 @@
 <html lang="th">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <title>ค้นรูปสินค้า</title>
-    <meta name="author" content="SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)" />
-    <meta name="description" content="ค้นรูปสินค้าด้วยรหัส AMOS / AS400 จากไฟล์ลิงก์ที่เก็บไว้ในเครื่อง" />
+    <meta
+      name="author"
+      content="SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)"
+    />
+    <meta
+      name="description"
+      content="ค้นรูปสินค้าด้วยรหัสสินค้า จากไฟล์ลิงก์ที่เก็บไว้ในเครื่อง"
+    />
     <meta name="theme-color" content="#6a5cf5" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon-192.png" />
@@ -14,7 +23,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="ค้นรูปสินค้า" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <!--
       PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
       v2.8: แก้ป้ายอีเมลผู้พัฒนาที่แถบบนถูกตัดคำเมื่อปุ่มติดตั้งแสดง (Android) — ไม่ตัดบรรทัด, ปุ่มด้านขวาเรียงแนวตั้ง
@@ -33,150 +45,483 @@
     -->
     <style>
       :root {
-        --bg: #f3f2fb; --panel: #fff; --panel2: #f7f6fd; --border: #e4e1f7;
-        --text: #2b2a3d; --muted: #7d7b9c; --accent: #6a5cf5; --accent-soft: #efeafe;
-        --good: #1a9e63; --warn: #c97710; --bad: #d63d34;
+        --bg: #f3f2fb;
+        --panel: #fff;
+        --panel2: #f7f6fd;
+        --border: #e4e1f7;
+        --text: #2b2a3d;
+        --muted: #7d7b9c;
+        --accent: #6a5cf5;
+        --accent-soft: #efeafe;
+        --good: #1a9e63;
+        --warn: #c97710;
+        --bad: #d63d34;
         --mono: ui-monospace, "SFMono-Regular", Consolas, Menlo, monospace;
-        --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-top: env(safe-area-inset-top, 0px);
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
       }
-      * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-      html, body { margin: 0; background: var(--bg); color: var(--text); }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
       body {
-        line-height: 1.5; min-height: 100vh;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Thai", "Sukhumvit Set", sans-serif;
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+      body {
+        line-height: 1.5;
+        min-height: 100vh;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Noto Sans Thai", "Sukhumvit Set", sans-serif;
         padding-bottom: calc(16px + var(--safe-bottom));
       }
       .topbar {
-        position: sticky; top: 0; z-index: 10;
-        background: linear-gradient(90deg, #6a5cf5, #8b7bfb); color: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: linear-gradient(90deg, #6a5cf5, #8b7bfb);
+        color: #fff;
         padding: calc(12px + var(--safe-top)) 16px 12px;
-        display: flex; align-items: center; justify-content: space-between; gap: 8px;
-        box-shadow: 0 2px 10px rgba(106, 92, 245, .25);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        box-shadow: 0 2px 10px rgba(106, 92, 245, 0.25);
       }
-      .topbar .title { font-size: 1.05rem; font-weight: 700; }
-      .topbar .badge { display: inline-block; margin-top: 3px; background: rgba(255,255,255,.18); padding: 2px 8px; border-radius: 999px; font-size: .62rem; white-space: nowrap; }
-      .topbar > div:first-child { min-width: 0; }
-      .topbar > .row { flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+      .topbar .title {
+        font-size: 1.05rem;
+        font-weight: 700;
+      }
+      .topbar .badge {
+        display: inline-block;
+        margin-top: 3px;
+        background: rgba(255, 255, 255, 0.18);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.62rem;
+        white-space: nowrap;
+      }
+      .topbar > div:first-child {
+        min-width: 0;
+      }
+      .topbar > .row {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        flex-shrink: 0;
+      }
       .iconbtn {
-        background: rgba(255,255,255,.18); color: #fff; border: 0; border-radius: 999px;
-        padding: 6px 12px; font: inherit; font-size: .8rem; cursor: pointer;
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        border: 0;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font: inherit;
+        font-size: 0.8rem;
+        cursor: pointer;
       }
-      .wrap { max-width: 640px; margin: 0 auto; padding: 12px; }
+      .wrap {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 12px;
+      }
       .card {
-        background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
-        padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(43,42,61,.04);
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(43, 42, 61, 0.04);
       }
-      .card h2 { font-size: .98rem; margin: 0 0 4px; color: #3a3760; }
-      .hint { color: var(--muted); font-size: .84rem; margin: 2px 0 10px; }
+      .card h2 {
+        font-size: 0.98rem;
+        margin: 0 0 4px;
+        color: #3a3760;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 0.84rem;
+        margin: 2px 0 10px;
+      }
       .btn {
-        background: var(--accent); color: #fff; border: none; border-radius: 999px; padding: 12px 20px;
-        font: inherit; font-size: .95rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(106,92,245,.3);
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: 999px;
+        padding: 12px 20px;
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(106, 92, 245, 0.3);
       }
-      .btn:disabled { opacity: .35; box-shadow: none; cursor: not-allowed; }
-      .btn.secondary { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
-      .btn.block { width: 100%; }
-      .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-      .status { font-size: .84rem; color: var(--muted); margin-top: 8px; word-break: break-word; }
-      .status.ok { color: var(--good); } .status.warn { color: var(--warn); } .status.bad { color: var(--bad); }
+      .btn:disabled {
+        opacity: 0.35;
+        box-shadow: none;
+        cursor: not-allowed;
+      }
+      .btn.secondary {
+        background: var(--accent-soft);
+        color: var(--accent);
+        box-shadow: none;
+      }
+      .btn.block {
+        width: 100%;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .status {
+        font-size: 0.84rem;
+        color: var(--muted);
+        margin-top: 8px;
+        word-break: break-word;
+      }
+      .status.ok {
+        color: var(--good);
+      }
+      .status.warn {
+        color: var(--warn);
+      }
+      .status.bad {
+        color: var(--bad);
+      }
 
-      .searchbox { display: flex; gap: 8px; }
+      .searchbox {
+        display: flex;
+        gap: 8px;
+      }
       .searchbox input {
-        flex: 1; min-width: 0; font-size: 1.25rem; padding: 12px 14px; border-radius: 12px;
-        border: 2px solid var(--border); font-family: var(--mono); background: #fff; color: var(--text);
+        flex: 1;
+        min-width: 0;
+        font-size: 1.25rem;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 2px solid var(--border);
+        font-family: var(--mono);
+        background: #fff;
+        color: var(--text);
       }
-      .searchbox input:focus { outline: none; border-color: var(--accent); }
-      .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      .searchbox input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
       .chip {
-        background: var(--panel2); border: 1px solid var(--border); border-radius: 999px; padding: 4px 11px;
-        font-size: .8rem; font-family: var(--mono); cursor: pointer; color: var(--text);
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 11px;
+        font-size: 0.8rem;
+        font-family: var(--mono);
+        cursor: pointer;
+        color: var(--text);
       }
-      .chip.nf { color: var(--bad); }
+      .chip.nf {
+        color: var(--bad);
+      }
 
-      .result-empty { color: var(--muted); text-align: center; padding: 40px 10px; }
-      .result-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
-      .src { padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
-      .src.found { background: #e3f7ee; color: var(--good); }
-      .src.none { background: #fde8e7; color: var(--bad); }
+      .result-empty {
+        color: var(--muted);
+        text-align: center;
+        padding: 40px 10px;
+      }
+      .result-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .src {
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+      .src.found {
+        background: #e3f7ee;
+        color: var(--good);
+      }
+      .src.none {
+        background: #fde8e7;
+        color: var(--bad);
+      }
       .imgbox {
-        margin-top: 10px; background: #fff; border: 1px solid var(--border); border-radius: 12px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-        min-height: 220px; padding: 10px;
+        margin-top: 10px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 220px;
+        padding: 10px;
       }
       .imgbox img {
-        max-width: 100%; max-height: 60vh; object-fit: contain;
+        max-width: 100%;
+        max-height: 60vh;
+        object-fit: contain;
         -webkit-touch-callout: default; /* iOS: ให้กดค้างแล้วมีเมนูบันทึกรูป */
       }
-      .imglabel { font-family: var(--mono); font-weight: 700; font-size: .95rem; text-align: center; word-break: break-all; }
-      .imgname { font-size: .82rem; color: #4a4868; text-align: center; line-height: 1.35; max-width: 100%; word-break: break-word; }
-      .baked { font-size: .74rem; color: var(--good); text-align: center; }
+      .imglabel {
+        font-family: var(--mono);
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-align: center;
+        word-break: break-all;
+      }
+      .imgname {
+        font-size: 0.82rem;
+        color: #4a4868;
+        text-align: center;
+        line-height: 1.35;
+        max-width: 100%;
+        word-break: break-word;
+      }
+      .baked {
+        font-size: 0.74rem;
+        color: var(--good);
+        text-align: center;
+      }
       /* v2.3: หน้าดูรูป (เปิดในแท็บใหม่) */
-      body.viewer { background: #fff; padding: 0; }
-      .viewer-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom)); }
-      .viewer-wrap img { max-width: 100%; max-height: 82vh; object-fit: contain; -webkit-touch-callout: default; }
-      .viewer-wrap .imglabel { font-size: 1.15rem; }
-      .viewer-wrap .imgname { font-size: 1rem; }
-      .viewer-wrap .tip { text-align: center; }
-      .thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+      body.viewer {
+        background: #fff;
+        padding: 0;
+      }
+      .viewer-wrap {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: calc(16px + var(--safe-top)) 16px
+          calc(16px + var(--safe-bottom));
+      }
+      .viewer-wrap img {
+        max-width: 100%;
+        max-height: 82vh;
+        object-fit: contain;
+        -webkit-touch-callout: default;
+      }
+      .viewer-wrap .imglabel {
+        font-size: 1.15rem;
+      }
+      .viewer-wrap .imgname {
+        font-size: 1rem;
+      }
+      .viewer-wrap .tip {
+        text-align: center;
+      }
+      .thumbs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
       .thumbs img {
-        width: 64px; height: 64px; object-fit: contain; border: 2px solid var(--border); border-radius: 8px; background: #fff;
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+        border: 2px solid var(--border);
+        border-radius: 8px;
+        background: #fff;
       }
-      .thumbs img.active { border-color: var(--accent); }
-      .tip { font-size: .84rem; color: var(--muted); margin-top: 10px; }
-      .url { font-size: .72rem; color: var(--muted); word-break: break-all; margin-top: 6px; }
-      details.steps { margin-top: 10px; font-size: .78rem; }
-      details.steps summary { color: var(--muted); cursor: pointer; }
+      .thumbs img.active {
+        border-color: var(--accent);
+      }
+      .tip {
+        font-size: 0.84rem;
+        color: var(--muted);
+        margin-top: 10px;
+      }
+      .url {
+        font-size: 0.72rem;
+        color: var(--muted);
+        word-break: break-all;
+        margin-top: 6px;
+      }
+      details.steps {
+        margin-top: 10px;
+        font-size: 0.78rem;
+      }
+      details.steps summary {
+        color: var(--muted);
+        cursor: pointer;
+      }
       details.steps div.box {
-        margin-top: 6px; font-family: var(--mono); background: var(--panel2); border-radius: 10px;
-        padding: 8px 10px; white-space: pre-wrap; word-break: break-all;
+        margin-top: 6px;
+        font-family: var(--mono);
+        background: var(--panel2);
+        border-radius: 10px;
+        padding: 8px 10px;
+        white-space: pre-wrap;
+        word-break: break-all;
       }
-      .g { color: var(--good); } .w { color: var(--warn); }
+      .g {
+        color: var(--good);
+      }
+      .w {
+        color: var(--warn);
+      }
 
-      .progress { height: 6px; background: var(--accent-soft); border-radius: 999px; overflow: hidden; margin-top: 10px; display: none; }
-      .progress > div { height: 100%; width: 30%; background: var(--accent); border-radius: 999px; animation: slide 1.1s ease-in-out infinite; }
-      @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(340%); } }
-      .spinner {
-        display: inline-block; width: 14px; height: 14px; border: 2px solid var(--accent-soft);
-        border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -2px;
+      .progress {
+        height: 6px;
+        background: var(--accent-soft);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-top: 10px;
+        display: none;
       }
-      @keyframes spin { to { transform: rotate(360deg); } }
+      .progress > div {
+        height: 100%;
+        width: 30%;
+        background: var(--accent);
+        border-radius: 999px;
+        animation: slide 1.1s ease-in-out infinite;
+      }
+      @keyframes slide {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(340%);
+        }
+      }
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--accent-soft);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        vertical-align: -2px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
       .banner {
-        background: #fff7e8; border: 1px solid #f5d9a8; color: #7a4d06; border-radius: 12px;
-        padding: 10px 12px; font-size: .86rem; margin-bottom: 12px;
+        background: #fff7e8;
+        border: 1px solid #f5d9a8;
+        color: #7a4d06;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 0.86rem;
+        margin-bottom: 12px;
       }
-      .banner b { color: #5c3a04; }
+      .banner b {
+        color: #5c3a04;
+      }
       .toast {
-        position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + var(--safe-bottom));
-        background: #2b2a3d; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: .86rem;
-        box-shadow: 0 4px 16px rgba(0,0,0,.25); z-index: 50; display: none; max-width: 92vw; text-align: center;
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: calc(16px + var(--safe-bottom));
+        background: #2b2a3d;
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-size: 0.86rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        z-index: 50;
+        display: none;
+        max-width: 92vw;
+        text-align: center;
       }
-      .meta { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: .84rem; margin: 6px 0 10px; }
-      .meta dt { color: var(--muted); } .meta dd { margin: 0; word-break: break-all; }
-      .hidden { display: none !important; }
-      .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); pointer-events: none; }
-      label.btn { display: inline-block; text-align: center; user-select: none; -webkit-user-select: none; }
-      label.btn.disabled { opacity: .35; box-shadow: none; pointer-events: none; }
-      .ver { text-align: center; color: var(--muted); font-size: .72rem; margin-top: 4px; }
+      .meta {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 10px;
+        font-size: 0.84rem;
+        margin: 6px 0 10px;
+      }
+      .meta dt {
+        color: var(--muted);
+      }
+      .meta dd {
+        margin: 0;
+        word-break: break-all;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .vh {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        pointer-events: none;
+      }
+      label.btn {
+        display: inline-block;
+        text-align: center;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      label.btn.disabled {
+        opacity: 0.35;
+        box-shadow: none;
+        pointer-events: none;
+      }
+      .ver {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.72rem;
+        margin-top: 4px;
+      }
     </style>
   </head>
   <body>
     <div class="topbar">
       <div>
         <div class="title">🔍 ค้นรูปสินค้า</div>
-        <div class="badge" id="dev-badge">v2.8 (Suwanneepatt@24shopping.co.th)</div>
+        <div class="badge" id="dev-badge">
+          v2.8 (Suwanneepatt@24shopping.co.th)
+        </div>
       </div>
       <div class="row">
         <button class="iconbtn hidden" id="btn-install">⬇ ติดตั้ง</button>
-        <button class="iconbtn" id="btn-settings" title="ไฟล์ลิงก์">📄 ไฟล์ลิงก์</button>
+        <button class="iconbtn" id="btn-settings" title="ไฟล์ลิงก์">
+          📄 ไฟล์ลิงก์
+        </button>
       </div>
     </div>
 
     <div class="wrap">
       <!-- iOS: วิธีติดตั้ง (แสดงเมื่อเปิดใน Safari ยังไม่ได้ติดตั้ง) -->
       <div class="banner hidden" id="ios-install">
-        📲 <b>ติดตั้งเป็นแอป:</b> แตะปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรขึ้น) แล้วเลือก <b>“เพิ่มไปยังหน้าจอโฮม”</b>
+        📲 <b>ติดตั้งเป็นแอป:</b> แตะปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรขึ้น)
+        แล้วเลือก <b>“เพิ่มไปยังหน้าจอโฮม”</b>
         — เปิดจากไอคอนบนหน้าโฮมแล้ว ข้อมูลไฟล์ลิงก์จะไม่ถูก Safari ลบอัตโนมัติ
-        <div style="text-align: right; margin-top: 4px"><button class="btn secondary" id="ios-install-close" style="padding: 6px 14px; font-size: .8rem">ปิด</button></div>
+        <div style="text-align: right; margin-top: 4px">
+          <button
+            class="btn secondary"
+            id="ios-install-close"
+            style="padding: 6px 14px; font-size: 0.8rem"
+          >
+            ปิด
+          </button>
+        </div>
       </div>
       <div class="banner hidden" id="unsupported"></div>
 
@@ -184,31 +529,56 @@
       <div class="card hidden" id="setup">
         <h2 id="setup-title">📄 ไฟล์ลิงก์รูป</h2>
         <p class="hint" id="setup-hint">
-          แอปโหลดไฟล์ลิงก์รูป (ไฟล์มาสเตอร์) จากระบบให้อัตโนมัติ และตรวจอัปเดตทุกครั้งที่เปิดแอปตอนมีเน็ต
-          — ข้อมูลเก็บไว้ในเครื่อง ค้นได้แม้ไม่มีเน็ต
+          แอปโหลดไฟล์ลิงก์รูป (ไฟล์มาสเตอร์) จากระบบให้อัตโนมัติ
+          และตรวจอัปเดตทุกครั้งที่เปิดแอปตอนมีเน็ต — ข้อมูลเก็บไว้ในเครื่อง
+          ค้นได้แม้ไม่มีเน็ต
         </p>
         <dl class="meta hidden" id="meta"></dl>
         <div class="row">
           <!-- v2.2: ใช้ <label for> แตะแล้ว iOS เปิดตัวเลือกไฟล์เองโดยตรง ไม่ต้องผ่าน input.click() จาก JS -->
           <button class="btn" id="btn-sync">🔄 ตรวจอัปเดตไฟล์ลิงก์</button>
-          <label class="btn secondary" id="btn-pick" for="f-link" role="button">📄 เลือกไฟล์เอง (สำรอง)</label>
-          <button class="btn secondary hidden" id="btn-close-setup">กลับไปค้นหา</button>
+          <label class="btn secondary" id="btn-pick" for="f-link" role="button"
+            >📄 เลือกไฟล์เอง (สำรอง)</label
+          >
+          <button class="btn secondary hidden" id="btn-close-setup">
+            กลับไปค้นหา
+          </button>
         </div>
         <!-- v2.2: ซ่อนแบบมองไม่เห็นแต่ยังอยู่ใน layout (display:none ทำให้ iOS บางรุ่นไม่เปิดตัวเลือกไฟล์) -->
         <input type="file" id="f-link" class="vh" tabindex="-1" />
         <!-- v2.1: ไม่ใส่ accept - บาง Android/OneDrive รายงานชนิดไฟล์ไม่ตรง ทำให้ไฟล์ .xlsx เป็นสีเทาเลือกไม่ได้ ; ตรวจชนิดไฟล์ในโค้ดแทน -->
         <div class="progress" id="progress"><div></div></div>
         <div class="status" id="setup-status"></div>
-        <div class="row hidden" id="danger-zone" style="margin-top: 14px; justify-content: flex-end">
-          <button class="btn secondary" id="btn-clear" style="padding: 6px 14px; font-size: .8rem">🗑 ลบข้อมูลไฟล์ลิงก์ในเครื่อง</button>
+        <div
+          class="row hidden"
+          id="danger-zone"
+          style="margin-top: 14px; justify-content: flex-end"
+        >
+          <button
+            class="btn secondary"
+            id="btn-clear"
+            style="padding: 6px 14px; font-size: 0.8rem"
+          >
+            🗑 ลบข้อมูลไฟล์ลิงก์ในเครื่อง
+          </button>
         </div>
       </div>
 
       <!-- ค้นหา -->
       <div class="card" id="search-card">
         <div class="searchbox">
-          <input id="code" type="search" inputmode="numeric" enterkeyhint="search" autocomplete="off"
-            autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="รหัส AMOS / AS400" disabled />
+          <input
+            id="code"
+            type="search"
+            inputmode="numeric"
+            enterkeyhint="search"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="รหัสสินค้า"
+            disabled
+          />
           <button class="btn" id="btn-search" disabled>ค้นหา</button>
         </div>
         <div class="status" id="search-status"></div>
@@ -217,354 +587,612 @@
 
       <div class="card hidden" id="result"></div>
       <details class="card" id="diag-card">
-        <summary style="cursor: pointer; color: var(--muted); font-size: .86rem">🛠 ข้อมูลสำหรับแจ้งปัญหา</summary>
-        <div class="hint" style="margin-top: 8px">ถ้าใช้งานไม่ได้ กด “คัดลอก” แล้วส่งข้อความนี้ (หรือแคปหน้าจอ) ให้ผู้ดูแลโปรแกรม</div>
-        <pre id="diag" style="font-family: var(--mono); font-size: .72rem; background: var(--panel2); border-radius: 10px; padding: 8px 10px; white-space: pre-wrap; word-break: break-all; margin: 0 0 8px; user-select: text; -webkit-user-select: text"></pre>
-        <button class="btn secondary" id="btn-copy-diag" style="padding: 6px 14px; font-size: .8rem">📋 คัดลอก</button>
+        <summary
+          style="cursor: pointer; color: var(--muted); font-size: 0.86rem"
+        >
+          🛠 ข้อมูลสำหรับแจ้งปัญหา
+        </summary>
+        <div class="hint" style="margin-top: 8px">
+          ถ้าใช้งานไม่ได้ กด “คัดลอก” แล้วส่งข้อความนี้ (หรือแคปหน้าจอ)
+          ให้ผู้ดูแลโปรแกรม
+        </div>
+        <pre
+          id="diag"
+          style="
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            background: var(--panel2);
+            border-radius: 10px;
+            padding: 8px 10px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0 0 8px;
+            user-select: text;
+            -webkit-user-select: text;
+          "
+        ></pre>
+        <button
+          class="btn secondary"
+          id="btn-copy-diag"
+          style="padding: 6px 14px; font-size: 0.8rem"
+        >
+          📋 คัดลอก
+        </button>
       </details>
-      <div class="ver" id="ver">ค้นรูปสินค้า v2.8 • ผู้พัฒนา: SUWANNEE PATTISITIWONG (Suwanneepatt@24shopping.co.th)</div>
+      <div class="ver" id="ver">
+        ค้นรูปสินค้า v2.8 • ผู้พัฒนา: SUWANNEE PATTISITIWONG
+        (Suwanneepatt@24shopping.co.th)
+      </div>
     </div>
 
     <div class="toast" id="toast"></div>
 
     <script>
-/*CORE-START*/
-/* PicSearch core (ใช้ได้ทั้งเบราว์เซอร์และ Node สำหรับทดสอบ)
- * - ZIP/XLSX reader ด้วย DecompressionStream("deflate-raw") ของเบราว์เซอร์ ไม่ต้องใช้ไลบรารี (fflate) จาก CDN
- *   รองรับ: Chrome/Edge 103+, Safari/iOS 16.4+, Firefox 113+
- * - อ่านชีตแบบ stream ทีละ chunk (ไฟล์ลิงก์ใหญ่ ไม่โหลด XML ทั้งก้อนเข้าหน่วยความจำ)
- * - หลักการค้นเหมือน PicSearch v1.7 ทุกขั้น (A -> C -> ลิงก์จาก B, lookupKeys, ป้ายรหัส)
- */
-(function (root) {
-  "use strict";
+      /*CORE-START*/
+      /* PicSearch core (ใช้ได้ทั้งเบราว์เซอร์และ Node สำหรับทดสอบ)
+       * - ZIP/XLSX reader ด้วย DecompressionStream("deflate-raw") ของเบราว์เซอร์ ไม่ต้องใช้ไลบรารี (fflate) จาก CDN
+       *   รองรับ: Chrome/Edge 103+, Safari/iOS 16.4+, Firefox 113+
+       * - อ่านชีตแบบ stream ทีละ chunk (ไฟล์ลิงก์ใหญ่ ไม่โหลด XML ทั้งก้อนเข้าหน่วยความจำ)
+       * - หลักการค้นเหมือน PicSearch v1.7 ทุกขั้น (A -> C -> ลิงก์จาก B, lookupKeys, ป้ายรหัส)
+       */
+      (function (root) {
+        "use strict";
 
-  // ---------------- helpers ----------------
-  function normalizeKey(v) {
-    const s = v === null || v === undefined ? "" : String(v).trim();
-    const m = s.match(/^(-?\d+)\.0+$/);
-    return m ? m[1] : s;
-  }
-  const ENT = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
-  function decodeEntities(str) {
-    if (!str || str.indexOf("&") === -1) return str;
-    return str.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g, (m, e) => {
-      if (e[0] === "#") return String.fromCodePoint(e[1] === "x" ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10));
-      return ENT[e];
-    });
-  }
-
-  function supportsNativeUnzip() {
-    try { new DecompressionStream("deflate-raw"); return true; } catch (e) { return false; }
-  }
-
-  // ---------------- ZIP (อ่านจาก Central Directory - ถูกต้องแม้ local header ใช้ data descriptor) ----------------
-  async function openZip(file) {
-    const tailLen = Math.min(file.size, 22 + 65535);
-    const tail = new DataView(await file.slice(file.size - tailLen).arrayBuffer());
-    let eocd = -1;
-    for (let i = tailLen - 22; i >= 0; i--) if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
-    if (eocd < 0) throw new Error("ไม่ใช่ไฟล์ .xlsx (ไม่พบโครงสร้าง ZIP)");
-    const cdSize = tail.getUint32(eocd + 12, true), cdOffset = tail.getUint32(eocd + 16, true);
-    if (cdOffset === 0xffffffff || cdSize === 0xffffffff) throw new Error("ไฟล์ใหญ่เกิน 4GB (ZIP64) ไม่รองรับ");
-    const cd = new DataView(await file.slice(cdOffset, cdOffset + cdSize).arrayBuffer());
-    const dec = new TextDecoder("utf-8");
-    const entries = new Map();
-    let p = 0;
-    while (p + 46 <= cd.byteLength && cd.getUint32(p, true) === 0x02014b50) {
-      const method = cd.getUint16(p + 10, true);
-      const compSize = cd.getUint32(p + 20, true);
-      const nameLen = cd.getUint16(p + 28, true), extraLen = cd.getUint16(p + 30, true), cmtLen = cd.getUint16(p + 32, true);
-      const localOffset = cd.getUint32(p + 42, true);
-      const name = dec.decode(new Uint8Array(cd.buffer, cd.byteOffset + p + 46, nameLen));
-      entries.set(name, { method, compSize, localOffset });
-      p += 46 + nameLen + extraLen + cmtLen;
-    }
-    return { file, entries };
-  }
-
-  async function entryTextStream(zip, name) {
-    const e = zip.entries.get(name);
-    if (!e) return null;
-    const lh = new DataView(await zip.file.slice(e.localOffset, e.localOffset + 30).arrayBuffer());
-    if (lh.getUint32(0, true) !== 0x04034b50) throw new Error("ไฟล์เสีย (local header ของ " + name + ")");
-    const start = e.localOffset + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
-    let s = zip.file.slice(start, start + e.compSize).stream();
-    if (e.method === 8) s = s.pipeThrough(new DecompressionStream("deflate-raw"));
-    else if (e.method !== 0) throw new Error("รูปแบบบีบอัดไม่รองรับ (method " + e.method + ")");
-    return s.pipeThrough(new TextDecoderStream("utf-8"));
-  }
-
-  async function readEntryText(zip, name) {
-    const s = await entryTextStream(zip, name);
-    if (!s) return "";
-    const reader = s.getReader();
-    let out = "";
-    for (;;) { const { done, value } = await reader.read(); if (done) break; out += value; }
-    return out;
-  }
-
-  // ---------------- XLSX ----------------
-  function sheetList(wbXml) {
-    // คืน [{name, rid}] ตามลำดับในไฟล์ (ลำดับ attribute ใน <sheet> ไม่แน่นอน)
-    const out = [];
-    for (const m of wbXml.matchAll(/<sheet\b[^>]*\/?>/g)) {
-      const tag = m[0];
-      const nm = /\bname="([^"]*)"/.exec(tag), rid = /\br:id="([^"]*)"/.exec(tag);
-      if (nm) out.push({ name: decodeEntities(nm[1]), rid: rid ? rid[1] : null });
-    }
-    return out;
-  }
-  function resolveSheetPath(sheets, relsXml, sheetName) {
-    const relMap = {};
-    for (const m of relsXml.matchAll(/<Relationship\b[^>]*\/?>/g)) {
-      const id = /\bId="([^"]*)"/.exec(m[0]), tg = /\bTarget="([^"]*)"/.exec(m[0]);
-      if (id && tg) relMap[id[1]] = tg[1];
-    }
-    const s = sheets.find((x) => x.name === sheetName) || sheets[0];
-    let target = (s && relMap[s.rid]) || "worksheets/sheet1.xml";
-    if (target.startsWith("/")) target = target.slice(1);           // absolute "/xl/worksheets/..."
-    else target = target.replace(/^\.?\//, "");
-    if (!target.startsWith("xl/")) target = "xl/" + target;
-    return target;
-  }
-  function parseSharedStrings(xml) {
-    if (!xml) return [];
-    const result = [], siRe = /<si>([\s\S]*?)<\/si>/g, tRe = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
-    let m;
-    while ((m = siRe.exec(xml))) {
-      let txt = "", tm;
-      tRe.lastIndex = 0;
-      while ((tm = tRe.exec(m[1]))) txt += tm[1];
-      result.push(decodeEntities(txt));
-    }
-    return result;
-  }
-  // รองรับทั้ง <c r="A1" ...> และ <c ... r="A1"> (บางโปรแกรมสลับลำดับ attribute)
-  const CELL_RE = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
-  const R_RE = /\br="([A-Z]+)\d+"/, T_RE = /\bt="([a-zA-Z]+)"/, V_RE = /<v>([\s\S]*?)<\/v>/, IS_T_RE = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
-  function parseRowCells(rowText, wantedCols, shared) {
-    const row = {};
-    CELL_RE.lastIndex = 0;
-    let m;
-    while ((m = CELL_RE.exec(rowText))) {
-      const rm = R_RE.exec(m[1]);
-      if (!rm) continue;
-      const col = rm[1];
-      if (wantedCols && !wantedCols.has(col)) continue;
-      const inner = m[2];
-      if (inner == null) { row[col] = null; continue; }
-      const tm = T_RE.exec(m[1]);
-      const ctype = tm ? tm[1] : null;
-      let val = null;
-      if (ctype === "inlineStr") {
-        let txt = "", t2; IS_T_RE.lastIndex = 0;
-        while ((t2 = IS_T_RE.exec(inner))) txt += t2[1];
-        val = decodeEntities(txt);
-      } else {
-        const vm = V_RE.exec(inner);
-        if (vm) {
-          if (ctype === "s") { const i = parseInt(vm[1], 10); val = shared[i] !== undefined ? shared[i] : ""; }
-          else val = decodeEntities(vm[1]);
+        // ---------------- helpers ----------------
+        function normalizeKey(v) {
+          const s = v === null || v === undefined ? "" : String(v).trim();
+          const m = s.match(/^(-?\d+)\.0+$/);
+          return m ? m[1] : s;
         }
-      }
-      row[col] = val;
-    }
-    return row;
-  }
-
-  async function getSheetNames(zip) {
-    return sheetList(await readEntryText(zip, "xl/workbook.xml")).map((s) => s.name);
-  }
-
-  // อ่านไฟล์ลิงก์ -> rows: [{a, b, c}] เฉพาะแถวที่ B ไม่ว่าง (เหมือน v1.7)
-  // v2.1: error ทุกตัวติดชื่อขั้นตอนที่ล้ม เช่น "[อ่านชีต] ..." เพื่อหาสาเหตุจากหน้าจอผู้ใช้ได้ตรง
-  async function readLinkFile(file, onProgress) {
-    let stage = "ตรวจเบราว์เซอร์";
-    try { return await readLinkFileInner(file, onProgress, (s) => (stage = s)); }
-    catch (e) {
-      const err = new Error("[" + stage + "] " + (e && e.message ? e.message : String(e)));
-      err.stage = stage; err.cause = e; err.stack = (e && e.stack) || err.stack;
-      throw err;
-    }
-  }
-  async function readLinkFileInner(file, onProgress, setStage) {
-    if (!supportsNativeUnzip()) throw new Error("เบราว์เซอร์นี้เก่าเกินไป (ต้องเป็น iOS 16.4+ / Chrome 103+)");
-    if (typeof TextDecoderStream === "undefined") throw new Error("เบราว์เซอร์ไม่มี TextDecoderStream");
-    setStage("เปิดไฟล์ ZIP");
-    const zip = await openZip(file);
-    setStage("อ่าน workbook.xml");
-    const wbXml = await readEntryText(zip, "xl/workbook.xml");
-    if (!wbXml) throw new Error("ไม่พบ workbook ในไฟล์ (ใช่ไฟล์ .xlsx ไหม)");
-    const sheets = sheetList(wbXml);
-    if (!sheets.length) throw new Error("ไม่พบชีตในไฟล์");
-    const sheetName = sheets.some((s) => s.name === "Sheet0") ? "Sheet0" : sheets[0].name;
-    setStage("หาตำแหน่งชีต " + sheetName);
-    const sheetPath = resolveSheetPath(sheets, await readEntryText(zip, "xl/_rels/workbook.xml.rels"), sheetName);
-    setStage("อ่าน sharedStrings");
-    const shared = parseSharedStrings(await readEntryText(zip, "xl/sharedStrings.xml"));
-    setStage("อ่านชีต " + sheetName + " (" + sheetPath + ")");
-    const stream = await entryTextStream(zip, sheetPath);
-    if (!stream) throw new Error("ไม่พบข้อมูลชีต " + sheetPath + " ในไฟล์ (มี: " + [...zip.entries.keys()].filter((n) => n.includes("worksheets")).join(", ") + ")");
-
-    const wanted = new Set(["A", "B", "C", "D", "E"]); // v2.6: D = ShortDescription, E = s_Note50 (ชื่อสินค้า)
-    const rows = [];
-    let buf = "", rowNum = 0, lastUi = 0;
-    const reader = stream.getReader();
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (value) buf += value;
-      for (;;) {
-        const s = buf.indexOf("<row");
-        if (s === -1) { if (buf.length > 1048576) buf = buf.slice(-64); break; }
-        // "<row" ต้องตามด้วยช่องว่างหรือ ">" (กันชนกับ <rowBreaks> ฯลฯ)
-        const ch = buf.charAt(s + 4);
-        if (ch && ch !== " " && ch !== ">") { buf = buf.slice(s + 4); continue; }
-        // แถวว่างแบบ <row r="5"/> ไม่มี </row>
-        const gt = buf.indexOf(">", s);
-        if (gt === -1) { buf = buf.slice(s); break; }
-        if (buf.charAt(gt - 1) === "/") { buf = buf.slice(gt + 1); rowNum++; continue; }
-        const e = buf.indexOf("</row>", gt);
-        if (e === -1) { buf = buf.slice(s); break; }
-        const rowText = buf.slice(gt + 1, e);
-        buf = buf.slice(e + 6);
-        rowNum++;
-        const r = parseRowCells(rowText, wanted, shared);
-        const b = r.B != null ? String(r.B).trim() : "";
-        if (b) {
-          // v2.6: ชื่อสินค้า ใช้คอลัมน์ E เป็นหลัก ถ้า E ว่างใช้คอลัมน์ D
-          const e = r.E != null ? String(r.E).trim() : "", d = r.D != null ? String(r.D).trim() : "";
-          rows.push({ a: normalizeKey(r.A), b, c: normalizeKey(r.C), n: e || d, nc: e ? "E" : d ? "D" : "" });
+        const ENT = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
+        function decodeEntities(str) {
+          if (!str || str.indexOf("&") === -1) return str;
+          return str.replace(
+            /&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g,
+            (m, e) => {
+              if (e[0] === "#")
+                return String.fromCodePoint(
+                  e[1] === "x"
+                    ? parseInt(e.slice(2), 16)
+                    : parseInt(e.slice(1), 10),
+                );
+              return ENT[e];
+            },
+          );
         }
-        if (onProgress && rowNum - lastUi >= 20000) { lastUi = rowNum; await onProgress(rowNum); }
-      }
-      if (done) break;
-    }
-    return { rows, sheetName, totalRows: rowNum };
-  }
 
-  // ---------------- lookup (เหมือน v1.7) ----------------
-  // รหัสซ้ำหลายแถว ใช้แถวบนสุดที่มีลิงก์
-  function buildMaps(rows) {
-    const A = new Map(), C = new Map();
-    for (const rec of rows) {
-      if (rec.a && !A.has(rec.a)) A.set(rec.a, rec);
-      if (rec.c && !C.has(rec.c)) C.set(rec.c, rec);
-    }
-    return { A, C };
-  }
-  //   คอลัมน์ A: รหัสตรงตามที่พิมพ์ ; รหัส 9 หลัก (AMOS) ลอง 6หลักแรก+"_0" ; รหัส 6 หลัก ลอง รหัส+"_0"
-  //   คอลัมน์ C: รหัสตรงตามที่พิมพ์เท่านั้น
-  function lookupKeys(code, col) {
-    const keys = [code];
-    if (col === "A") {
-      if (code.length === 9) keys.push(code.slice(0, 6) + "_0");
-      else if (code.length === 6) keys.push(code + "_0");
-    }
-    return [...new Set(keys)];
-  }
-  function cleanCode(raw) { return normalizeKey(raw).replace(/\s+/g, ""); }
-  // คืน { col, key, images, label, name, nameCol } หรือ null
-  function search(maps, code) {
-    for (const col of ["A", "C"]) {
-      for (const k of lookupKeys(code, col)) {
-        const rec = maps[col].get(k);
-        if (rec) {
-          const images = String(rec.b).split("|").map((s) => s.trim()).filter(Boolean);
-          if (images.length) {
-            // ป้ายรหัส: พบใน A -> "รหัส (ค่า C)" ; พบใน C -> "รหัส (ค่า A ตัด _0 ท้าย)"
-            const other = col === "A" ? rec.c : String(rec.a || "").replace(/_0$/, "");
-            return { col, key: k, images, label: other ? code + " (" + other + ")" : code, name: rec.n || "", nameCol: rec.nc || "" };
+        function supportsNativeUnzip() {
+          try {
+            new DecompressionStream("deflate-raw");
+            return true;
+          } catch (e) {
+            return false;
           }
         }
-      }
-    }
-    return null;
-  }
 
-  const api = { normalizeKey, supportsNativeUnzip, openZip, getSheetNames, readLinkFile, buildMaps, lookupKeys, cleanCode, search };
-  if (typeof module !== "undefined" && module.exports) module.exports = api;
-  else root.PicCore = api;
-})(typeof self !== "undefined" ? self : this);
+        // ---------------- ZIP (อ่านจาก Central Directory - ถูกต้องแม้ local header ใช้ data descriptor) ----------------
+        async function openZip(file) {
+          const tailLen = Math.min(file.size, 22 + 65535);
+          const tail = new DataView(
+            await file.slice(file.size - tailLen).arrayBuffer(),
+          );
+          let eocd = -1;
+          for (let i = tailLen - 22; i >= 0; i--)
+            if (tail.getUint32(i, true) === 0x06054b50) {
+              eocd = i;
+              break;
+            }
+          if (eocd < 0)
+            throw new Error("ไม่ใช่ไฟล์ .xlsx (ไม่พบโครงสร้าง ZIP)");
+          const cdSize = tail.getUint32(eocd + 12, true),
+            cdOffset = tail.getUint32(eocd + 16, true);
+          if (cdOffset === 0xffffffff || cdSize === 0xffffffff)
+            throw new Error("ไฟล์ใหญ่เกิน 4GB (ZIP64) ไม่รองรับ");
+          const cd = new DataView(
+            await file.slice(cdOffset, cdOffset + cdSize).arrayBuffer(),
+          );
+          const dec = new TextDecoder("utf-8");
+          const entries = new Map();
+          let p = 0;
+          while (
+            p + 46 <= cd.byteLength &&
+            cd.getUint32(p, true) === 0x02014b50
+          ) {
+            const method = cd.getUint16(p + 10, true);
+            const compSize = cd.getUint32(p + 20, true);
+            const nameLen = cd.getUint16(p + 28, true),
+              extraLen = cd.getUint16(p + 30, true),
+              cmtLen = cd.getUint16(p + 32, true);
+            const localOffset = cd.getUint32(p + 42, true);
+            const name = dec.decode(
+              new Uint8Array(cd.buffer, cd.byteOffset + p + 46, nameLen),
+            );
+            entries.set(name, { method, compSize, localOffset });
+            p += 46 + nameLen + extraLen + cmtLen;
+          }
+          return { file, entries };
+        }
 
-/*CORE-END*/
+        async function entryTextStream(zip, name) {
+          const e = zip.entries.get(name);
+          if (!e) return null;
+          const lh = new DataView(
+            await zip.file
+              .slice(e.localOffset, e.localOffset + 30)
+              .arrayBuffer(),
+          );
+          if (lh.getUint32(0, true) !== 0x04034b50)
+            throw new Error("ไฟล์เสีย (local header ของ " + name + ")");
+          const start =
+            e.localOffset +
+            30 +
+            lh.getUint16(26, true) +
+            lh.getUint16(28, true);
+          let s = zip.file.slice(start, start + e.compSize).stream();
+          if (e.method === 8)
+            s = s.pipeThrough(new DecompressionStream("deflate-raw"));
+          else if (e.method !== 0)
+            throw new Error("รูปแบบบีบอัดไม่รองรับ (method " + e.method + ")");
+          return s.pipeThrough(new TextDecoderStream("utf-8"));
+        }
+
+        async function readEntryText(zip, name) {
+          const s = await entryTextStream(zip, name);
+          if (!s) return "";
+          const reader = s.getReader();
+          let out = "";
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            out += value;
+          }
+          return out;
+        }
+
+        // ---------------- XLSX ----------------
+        function sheetList(wbXml) {
+          // คืน [{name, rid}] ตามลำดับในไฟล์ (ลำดับ attribute ใน <sheet> ไม่แน่นอน)
+          const out = [];
+          for (const m of wbXml.matchAll(/<sheet\b[^>]*\/?>/g)) {
+            const tag = m[0];
+            const nm = /\bname="([^"]*)"/.exec(tag),
+              rid = /\br:id="([^"]*)"/.exec(tag);
+            if (nm)
+              out.push({
+                name: decodeEntities(nm[1]),
+                rid: rid ? rid[1] : null,
+              });
+          }
+          return out;
+        }
+        function resolveSheetPath(sheets, relsXml, sheetName) {
+          const relMap = {};
+          for (const m of relsXml.matchAll(/<Relationship\b[^>]*\/?>/g)) {
+            const id = /\bId="([^"]*)"/.exec(m[0]),
+              tg = /\bTarget="([^"]*)"/.exec(m[0]);
+            if (id && tg) relMap[id[1]] = tg[1];
+          }
+          const s = sheets.find((x) => x.name === sheetName) || sheets[0];
+          let target = (s && relMap[s.rid]) || "worksheets/sheet1.xml";
+          if (target.startsWith("/"))
+            target = target.slice(1); // absolute "/xl/worksheets/..."
+          else target = target.replace(/^\.?\//, "");
+          if (!target.startsWith("xl/")) target = "xl/" + target;
+          return target;
+        }
+        function parseSharedStrings(xml) {
+          if (!xml) return [];
+          const result = [],
+            siRe = /<si>([\s\S]*?)<\/si>/g,
+            tRe = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+          let m;
+          while ((m = siRe.exec(xml))) {
+            let txt = "",
+              tm;
+            tRe.lastIndex = 0;
+            while ((tm = tRe.exec(m[1]))) txt += tm[1];
+            result.push(decodeEntities(txt));
+          }
+          return result;
+        }
+        // รองรับทั้ง <c r="A1" ...> และ <c ... r="A1"> (บางโปรแกรมสลับลำดับ attribute)
+        const CELL_RE = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+        const R_RE = /\br="([A-Z]+)\d+"/,
+          T_RE = /\bt="([a-zA-Z]+)"/,
+          V_RE = /<v>([\s\S]*?)<\/v>/,
+          IS_T_RE = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+        function parseRowCells(rowText, wantedCols, shared) {
+          const row = {};
+          CELL_RE.lastIndex = 0;
+          let m;
+          while ((m = CELL_RE.exec(rowText))) {
+            const rm = R_RE.exec(m[1]);
+            if (!rm) continue;
+            const col = rm[1];
+            if (wantedCols && !wantedCols.has(col)) continue;
+            const inner = m[2];
+            if (inner == null) {
+              row[col] = null;
+              continue;
+            }
+            const tm = T_RE.exec(m[1]);
+            const ctype = tm ? tm[1] : null;
+            let val = null;
+            if (ctype === "inlineStr") {
+              let txt = "",
+                t2;
+              IS_T_RE.lastIndex = 0;
+              while ((t2 = IS_T_RE.exec(inner))) txt += t2[1];
+              val = decodeEntities(txt);
+            } else {
+              const vm = V_RE.exec(inner);
+              if (vm) {
+                if (ctype === "s") {
+                  const i = parseInt(vm[1], 10);
+                  val = shared[i] !== undefined ? shared[i] : "";
+                } else val = decodeEntities(vm[1]);
+              }
+            }
+            row[col] = val;
+          }
+          return row;
+        }
+
+        async function getSheetNames(zip) {
+          return sheetList(await readEntryText(zip, "xl/workbook.xml")).map(
+            (s) => s.name,
+          );
+        }
+
+        // อ่านไฟล์ลิงก์ -> rows: [{a, b, c}] เฉพาะแถวที่ B ไม่ว่าง (เหมือน v1.7)
+        // v2.1: error ทุกตัวติดชื่อขั้นตอนที่ล้ม เช่น "[อ่านชีต] ..." เพื่อหาสาเหตุจากหน้าจอผู้ใช้ได้ตรง
+        async function readLinkFile(file, onProgress) {
+          let stage = "ตรวจเบราว์เซอร์";
+          try {
+            return await readLinkFileInner(
+              file,
+              onProgress,
+              (s) => (stage = s),
+            );
+          } catch (e) {
+            const err = new Error(
+              "[" + stage + "] " + (e && e.message ? e.message : String(e)),
+            );
+            err.stage = stage;
+            err.cause = e;
+            err.stack = (e && e.stack) || err.stack;
+            throw err;
+          }
+        }
+        async function readLinkFileInner(file, onProgress, setStage) {
+          if (!supportsNativeUnzip())
+            throw new Error(
+              "เบราว์เซอร์นี้เก่าเกินไป (ต้องเป็น iOS 16.4+ / Chrome 103+)",
+            );
+          if (typeof TextDecoderStream === "undefined")
+            throw new Error("เบราว์เซอร์ไม่มี TextDecoderStream");
+          setStage("เปิดไฟล์ ZIP");
+          const zip = await openZip(file);
+          setStage("อ่าน workbook.xml");
+          const wbXml = await readEntryText(zip, "xl/workbook.xml");
+          if (!wbXml)
+            throw new Error("ไม่พบ workbook ในไฟล์ (ใช่ไฟล์ .xlsx ไหม)");
+          const sheets = sheetList(wbXml);
+          if (!sheets.length) throw new Error("ไม่พบชีตในไฟล์");
+          const sheetName = sheets.some((s) => s.name === "Sheet0")
+            ? "Sheet0"
+            : sheets[0].name;
+          setStage("หาตำแหน่งชีต " + sheetName);
+          const sheetPath = resolveSheetPath(
+            sheets,
+            await readEntryText(zip, "xl/_rels/workbook.xml.rels"),
+            sheetName,
+          );
+          setStage("อ่าน sharedStrings");
+          const shared = parseSharedStrings(
+            await readEntryText(zip, "xl/sharedStrings.xml"),
+          );
+          setStage("อ่านชีต " + sheetName + " (" + sheetPath + ")");
+          const stream = await entryTextStream(zip, sheetPath);
+          if (!stream)
+            throw new Error(
+              "ไม่พบข้อมูลชีต " +
+                sheetPath +
+                " ในไฟล์ (มี: " +
+                [...zip.entries.keys()]
+                  .filter((n) => n.includes("worksheets"))
+                  .join(", ") +
+                ")",
+            );
+
+          const wanted = new Set(["A", "B", "C", "D", "E"]); // v2.6: D = ShortDescription, E = s_Note50 (ชื่อสินค้า)
+          const rows = [];
+          let buf = "",
+            rowNum = 0,
+            lastUi = 0;
+          const reader = stream.getReader();
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (value) buf += value;
+            for (;;) {
+              const s = buf.indexOf("<row");
+              if (s === -1) {
+                if (buf.length > 1048576) buf = buf.slice(-64);
+                break;
+              }
+              // "<row" ต้องตามด้วยช่องว่างหรือ ">" (กันชนกับ <rowBreaks> ฯลฯ)
+              const ch = buf.charAt(s + 4);
+              if (ch && ch !== " " && ch !== ">") {
+                buf = buf.slice(s + 4);
+                continue;
+              }
+              // แถวว่างแบบ <row r="5"/> ไม่มี </row>
+              const gt = buf.indexOf(">", s);
+              if (gt === -1) {
+                buf = buf.slice(s);
+                break;
+              }
+              if (buf.charAt(gt - 1) === "/") {
+                buf = buf.slice(gt + 1);
+                rowNum++;
+                continue;
+              }
+              const e = buf.indexOf("</row>", gt);
+              if (e === -1) {
+                buf = buf.slice(s);
+                break;
+              }
+              const rowText = buf.slice(gt + 1, e);
+              buf = buf.slice(e + 6);
+              rowNum++;
+              const r = parseRowCells(rowText, wanted, shared);
+              const b = r.B != null ? String(r.B).trim() : "";
+              if (b) {
+                // v2.6: ชื่อสินค้า ใช้คอลัมน์ E เป็นหลัก ถ้า E ว่างใช้คอลัมน์ D
+                const e = r.E != null ? String(r.E).trim() : "",
+                  d = r.D != null ? String(r.D).trim() : "";
+                rows.push({
+                  a: normalizeKey(r.A),
+                  b,
+                  c: normalizeKey(r.C),
+                  n: e || d,
+                  nc: e ? "E" : d ? "D" : "",
+                });
+              }
+              if (onProgress && rowNum - lastUi >= 20000) {
+                lastUi = rowNum;
+                await onProgress(rowNum);
+              }
+            }
+            if (done) break;
+          }
+          return { rows, sheetName, totalRows: rowNum };
+        }
+
+        // ---------------- lookup (เหมือน v1.7) ----------------
+        // รหัสซ้ำหลายแถว ใช้แถวบนสุดที่มีลิงก์
+        function buildMaps(rows) {
+          const A = new Map(),
+            C = new Map();
+          for (const rec of rows) {
+            if (rec.a && !A.has(rec.a)) A.set(rec.a, rec);
+            if (rec.c && !C.has(rec.c)) C.set(rec.c, rec);
+          }
+          return { A, C };
+        }
+        //   คอลัมน์ A: รหัสตรงตามที่พิมพ์ ; รหัส 9 หลัก (AMOS) ลอง 6หลักแรก+"_0" ; รหัส 6 หลัก ลอง รหัส+"_0"
+        //   คอลัมน์ C: รหัสตรงตามที่พิมพ์เท่านั้น
+        function lookupKeys(code, col) {
+          const keys = [code];
+          if (col === "A") {
+            if (code.length === 9) keys.push(code.slice(0, 6) + "_0");
+            else if (code.length === 6) keys.push(code + "_0");
+          }
+          return [...new Set(keys)];
+        }
+        function cleanCode(raw) {
+          return normalizeKey(raw).replace(/\s+/g, "");
+        }
+        // คืน { col, key, images, label, name, nameCol } หรือ null
+        function search(maps, code) {
+          for (const col of ["A", "C"]) {
+            for (const k of lookupKeys(code, col)) {
+              const rec = maps[col].get(k);
+              if (rec) {
+                const images = String(rec.b)
+                  .split("|")
+                  .map((s) => s.trim())
+                  .filter(Boolean);
+                if (images.length) {
+                  // ป้ายรหัส: พบใน A -> "รหัส (ค่า C)" ; พบใน C -> "รหัส (ค่า A ตัด _0 ท้าย)"
+                  const other =
+                    col === "A"
+                      ? rec.c
+                      : String(rec.a || "").replace(/_0$/, "");
+                  return {
+                    col,
+                    key: k,
+                    images,
+                    label: other ? code + " (" + other + ")" : code,
+                    name: rec.n || "",
+                    nameCol: rec.nc || "",
+                  };
+                }
+              }
+            }
+          }
+          return null;
+        }
+
+        const api = {
+          normalizeKey,
+          supportsNativeUnzip,
+          openZip,
+          getSheetNames,
+          readLinkFile,
+          buildMaps,
+          lookupKeys,
+          cleanCode,
+          search,
+        };
+        if (typeof module !== "undefined" && module.exports)
+          module.exports = api;
+        else root.PicCore = api;
+      })(typeof self !== "undefined" ? self : this);
+
+      /*CORE-END*/
     </script>
     <script>
       "use strict";
       const APP_VERSION = "2.8";
       const $ = (id) => document.getElementById(id);
       const show = (el, on) => $(el).classList.toggle("hidden", !on);
-      function setStatus(id, text, cls) { const el = $(id); el.textContent = text; el.className = "status" + (cls ? " " + cls : ""); }
+      function setStatus(id, text, cls) {
+        const el = $(id);
+        el.textContent = text;
+        el.className = "status" + (cls ? " " + cls : "");
+      }
       let toastTimer = null;
       function toast(msg, ms) {
-        const t = $("toast"); t.textContent = msg; t.style.display = "block";
-        clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.style.display = "none"), ms || 2500);
+        const t = $("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => (t.style.display = "none"), ms || 2500);
       }
       // ================= v2.1: วินิจฉัยปัญหาบนจอ =================
       const diagLog = [];
       function diag(msg) {
         const line = new Date().toLocaleTimeString("th-TH") + "  " + msg;
-        diagLog.push(line); if (diagLog.length > 40) diagLog.shift();
+        diagLog.push(line);
+        if (diagLog.length > 40) diagLog.shift();
         renderDiag();
       }
       function renderDiag() {
-        const el = document.getElementById("diag"); if (!el) return;
+        const el = document.getElementById("diag");
+        if (!el) return;
         const has = (x) => (x ? "มี" : "ไม่มี");
-        let dsRaw = false; try { new DecompressionStream("deflate-raw"); dsRaw = true; } catch (e) {}
+        let dsRaw = false;
+        try {
+          new DecompressionStream("deflate-raw");
+          dsRaw = true;
+        } catch (e) {}
         el.textContent = [
           "แอป: v" + (typeof APP_VERSION !== "undefined" ? APP_VERSION : "?"),
-          "URL: " + location.protocol + "//" + location.host + location.pathname,
+          "URL: " +
+            location.protocol +
+            "//" +
+            location.host +
+            location.pathname,
           "เบราว์เซอร์: " + navigator.userAgent,
-          "ติดตั้งเป็นแอป: " + (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true ? "ใช่" : "ไม่"),
-          "DecompressionStream(deflate-raw): " + has(dsRaw) + " | TextDecoderStream: " + has(typeof TextDecoderStream !== "undefined"),
-          "IndexedDB: " + has(typeof indexedDB !== "undefined") + " | ServiceWorker: " + has("serviceWorker" in navigator) + " | core: " + has(typeof PicCore !== "undefined"),
+          "ติดตั้งเป็นแอป: " +
+            (window.matchMedia("(display-mode: standalone)").matches ||
+            navigator.standalone === true
+              ? "ใช่"
+              : "ไม่"),
+          "DecompressionStream(deflate-raw): " +
+            has(dsRaw) +
+            " | TextDecoderStream: " +
+            has(typeof TextDecoderStream !== "undefined"),
+          "IndexedDB: " +
+            has(typeof indexedDB !== "undefined") +
+            " | ServiceWorker: " +
+            has("serviceWorker" in navigator) +
+            " | core: " +
+            has(typeof PicCore !== "undefined"),
           "--- log ---",
-        ].concat(diagLog).join("\n");
+        ]
+          .concat(diagLog)
+          .join("\n");
       }
       window.addEventListener("error", (e) => {
         const opaque = e.message === "Script error." && !e.filename;
-        diag("❌ JS error: " + (e.message || e) + (e.filename ? " @ " + e.filename.split("/").pop() + ":" + e.lineno + ":" + e.colno : "") +
-          (e.error && e.error.stack ? "\n" + String(e.error.stack).split("\n").slice(0, 4).join("\n") : "") +
-          (opaque ? " (เบราว์เซอร์ซ่อนรายละเอียด — มักมาจากสคริปต์นอกแอป เช่น ส่วนขยาย Safari / ระบบแปลภาษา)" : ""));
+        diag(
+          "❌ JS error: " +
+            (e.message || e) +
+            (e.filename
+              ? " @ " +
+                e.filename.split("/").pop() +
+                ":" +
+                e.lineno +
+                ":" +
+                e.colno
+              : "") +
+            (e.error && e.error.stack
+              ? "\n" + String(e.error.stack).split("\n").slice(0, 4).join("\n")
+              : "") +
+            (opaque
+              ? " (เบราว์เซอร์ซ่อนรายละเอียด — มักมาจากสคริปต์นอกแอป เช่น ส่วนขยาย Safari / ระบบแปลภาษา)"
+              : ""),
+        );
         if (opaque) return; // ไม่ใช่ error ของแอป ไม่ต้องขึ้นแถบแดง
         const b = document.getElementById("unsupported");
-        if (b) { b.textContent = "❌ เกิดข้อผิดพลาดในโปรแกรม: " + e.message + " (ดูรายละเอียดใน “ข้อมูลสำหรับแจ้งปัญหา” ด้านล่าง)"; b.classList.remove("hidden"); }
+        if (b) {
+          b.textContent =
+            "❌ เกิดข้อผิดพลาดในโปรแกรม: " +
+            e.message +
+            " (ดูรายละเอียดใน “ข้อมูลสำหรับแจ้งปัญหา” ด้านล่าง)";
+          b.classList.remove("hidden");
+        }
       });
-      window.addEventListener("unhandledrejection", (e) => diag("❌ Promise error: " + ((e.reason && (e.reason.stack || e.reason.message)) || e.reason)));
+      window.addEventListener("unhandledrejection", (e) =>
+        diag(
+          "❌ Promise error: " +
+            ((e.reason && (e.reason.stack || e.reason.message)) || e.reason),
+        ),
+      );
 
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
-      const fmtDate = (t) => new Date(t).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        navigator.standalone === true;
+      const fmtDate = (t) =>
+        new Date(t).toLocaleString("th-TH", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
 
       // ================= IndexedDB: เก็บข้อมูลไฟล์ลิงก์ไว้ในเครื่อง =================
       // เก็บเป็น array [a, b, c] (เล็กกว่าเก็บเป็น object) + meta แยก record เพื่ออ่าน meta ได้เร็ว
-      const DB_NAME = "picSearchApp", STORE = "kv";
+      const DB_NAME = "picSearchApp",
+        STORE = "kv";
       function openDB() {
         return new Promise((res, rej) => {
           const r = indexedDB.open(DB_NAME, 1);
           r.onupgradeneeded = () => r.result.createObjectStore(STORE);
-          r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+          r.onsuccess = () => res(r.result);
+          r.onerror = () => rej(r.error);
         });
       }
-      async function dbPut(pairs) { // บันทึกหลาย key ใน transaction เดียว (ข้อมูลกับ meta ไม่หลุดกัน)
+      async function dbPut(pairs) {
+        // บันทึกหลาย key ใน transaction เดียว (ข้อมูลกับ meta ไม่หลุดกัน)
         const db = await openDB();
         return new Promise((res, rej) => {
           const tx = db.transaction(STORE, "readwrite");
           for (const [k, v] of pairs) tx.objectStore(STORE).put(v, k);
-          tx.oncomplete = res; tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error("บันทึกไม่สำเร็จ (พื้นที่เครื่องเต็ม?)"));
+          tx.oncomplete = res;
+          tx.onerror = () => rej(tx.error);
+          tx.onabort = () =>
+            rej(tx.error || new Error("บันทึกไม่สำเร็จ (พื้นที่เครื่องเต็ม?)"));
         });
       }
       async function dbGet(k) {
         const db = await openDB();
         return new Promise((res, rej) => {
           const r = db.transaction(STORE, "readonly").objectStore(STORE).get(k);
-          r.onsuccess = () => res(r.result ?? null); r.onerror = () => rej(r.error);
+          r.onsuccess = () => res(r.result ?? null);
+          r.onerror = () => rej(r.error);
         });
       }
       async function dbClear() {
         const db = await openDB();
         return new Promise((res, rej) => {
-          const tx = db.transaction(STORE, "readwrite"); tx.objectStore(STORE).clear();
-          tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+          const tx = db.transaction(STORE, "readwrite");
+          tx.objectStore(STORE).clear();
+          tx.oncomplete = res;
+          tx.onerror = () => rej(tx.error);
         });
       }
 
@@ -573,33 +1201,83 @@
 
       function renderMeta() {
         const m = state.meta;
-        show("meta", !!m); show("danger-zone", !!m); show("btn-close-setup", !!m);
+        show("meta", !!m);
+        show("danger-zone", !!m);
+        show("btn-close-setup", !!m);
         if (!m) return;
         $("meta").innerHTML = "";
-        const add = (k, v) => { const dt = document.createElement("dt"), dd = document.createElement("dd"); dt.textContent = k; dd.textContent = v; $("meta").append(dt, dd); };
-        add("ที่มา", m.source === "master" ? "☁ ไฟล์มาสเตอร์จากระบบ (อัปเดตอัตโนมัติ)" : "📄 เลือกไฟล์เอง");
+        const add = (k, v) => {
+          const dt = document.createElement("dt"),
+            dd = document.createElement("dd");
+          dt.textContent = k;
+          dd.textContent = v;
+          $("meta").append(dt, dd);
+        };
+        add(
+          "ที่มา",
+          m.source === "master"
+            ? "☁ ไฟล์มาสเตอร์จากระบบ (อัปเดตอัตโนมัติ)"
+            : "📄 เลือกไฟล์เอง",
+        );
         add("ไฟล์", m.fileName + " [" + m.sheetName + "]");
-        add("รหัส", "คอลัมน์ A " + m.countA.toLocaleString() + " / คอลัมน์ C " + m.countC.toLocaleString());
-        if (m.fileModified) add(m.source === "master" ? "ไฟล์มาสเตอร์อัปโหลดเมื่อ" : "ไฟล์แก้ไขล่าสุด", fmtDate(m.fileModified));
+        add(
+          "รหัส",
+          "คอลัมน์ A " +
+            m.countA.toLocaleString() +
+            " / คอลัมน์ C " +
+            m.countC.toLocaleString(),
+        );
+        if (m.fileModified)
+          add(
+            m.source === "master"
+              ? "ไฟล์มาสเตอร์อัปโหลดเมื่อ"
+              : "ไฟล์แก้ไขล่าสุด",
+            fmtDate(m.fileModified),
+          );
         if (m.lastCheck) add("ตรวจอัปเดตล่าสุด", fmtDate(m.lastCheck));
         add("โหลดเข้าแอปเมื่อ", fmtDate(m.savedAt));
-        add("ชื่อสินค้า", m.hasName ? (m.nameCount || 0).toLocaleString() + " รายการ (คอลัมน์ E ถ้าว่างใช้ D)" : "⚠ ยังไม่มี — กด “ตรวจอัปเดตไฟล์ลิงก์”");
-        if (m.saved === false) add("บันทึกในเครื่อง", "❌ บันทึกไม่ได้ (ใช้ได้เฉพาะรอบนี้)");
-        else add("พื้นที่ถาวร", m.persisted ? "✅ ระบบจะไม่ลบอัตโนมัติ" : (isIOS && !isStandalone ? "⚠ ติดตั้งเป็นแอปก่อน ไม่งั้น Safari อาจลบเมื่อไม่ได้เปิด 7 วัน" : "⚠ ระบบอาจลบเมื่อพื้นที่เครื่องเหลือน้อย"));
+        add(
+          "ชื่อสินค้า",
+          m.hasName
+            ? (m.nameCount || 0).toLocaleString() +
+                " รายการ (คอลัมน์ E ถ้าว่างใช้ D)"
+            : "⚠ ยังไม่มี — กด “ตรวจอัปเดตไฟล์ลิงก์”",
+        );
+        if (m.saved === false)
+          add("บันทึกในเครื่อง", "❌ บันทึกไม่ได้ (ใช้ได้เฉพาะรอบนี้)");
+        else
+          add(
+            "พื้นที่ถาวร",
+            m.persisted
+              ? "✅ ระบบจะไม่ลบอัตโนมัติ"
+              : isIOS && !isStandalone
+                ? "⚠ ติดตั้งเป็นแอปก่อน ไม่งั้น Safari อาจลบเมื่อไม่ได้เปิด 7 วัน"
+                : "⚠ ระบบอาจลบเมื่อพื้นที่เครื่องเหลือน้อย",
+          );
         $("setup-title").textContent = "📄 ไฟล์ลิงก์รูปในเครื่อง";
       }
       function setSearchEnabled(on) {
-        $("code").disabled = !on; $("btn-search").disabled = !on;
-        $("code").placeholder = on ? "รหัส AMOS / AS400" : "รอโหลดไฟล์ลิงก์…";
-        if (!on) setStatus("search-status", "⏳ ยังค้นหาไม่ได้ — รอโหลดไฟล์ลิงก์ (ด้านบน)", "warn");
+        $("code").disabled = !on;
+        $("btn-search").disabled = !on;
+        $("code").placeholder = on ? "รหัสสินค้า" : "รอโหลดไฟล์ลิงก์…";
+        if (!on)
+          setStatus(
+            "search-status",
+            "⏳ ยังค้นหาไม่ได้ — รอโหลดไฟล์ลิงก์ (ด้านบน)",
+            "warn",
+          );
       }
       function goSearch() {
-        show("setup", false); setSearchEnabled(true);
+        show("setup", false);
+        setSearchEnabled(true);
         if (!isIOS) $("code").focus(); // iOS เด้งคีย์บอร์ดเองไม่ได้ถ้าไม่ได้แตะ - ไม่ต้องสั่ง
       }
       function goSetup() {
-        show("setup", true); setSearchEnabled(!!state.maps); show("result", false);
-        renderMeta(); setStatus("setup-status", "");
+        show("setup", true);
+        setSearchEnabled(!!state.maps);
+        show("result", false);
+        renderMeta();
+        setStatus("setup-status", "");
         $("setup").scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
@@ -607,63 +1285,217 @@
       // opts: { source: "master" | "manual", tag, auto }  (auto = โหลดเบื้องหลังตอนผู้ใช้อยู่หน้าค้นหา)
       async function importFile(file, opts) {
         opts = opts || { source: "manual" };
-        diag((opts.source === "master" ? "ไฟล์มาสเตอร์: " : "เลือกไฟล์: ") + file.name + " | " + file.size.toLocaleString() + " bytes | type=" + (file.type || "-"));
+        diag(
+          (opts.source === "master" ? "ไฟล์มาสเตอร์: " : "เลือกไฟล์: ") +
+            file.name +
+            " | " +
+            file.size.toLocaleString() +
+            " bytes | type=" +
+            (file.type || "-"),
+        );
         // ตรวจจากเนื้อไฟล์ (ZIP ขึ้นต้นด้วย "PK") แทนนามสกุล - ไฟล์จาก OneDrive/Drive บางครั้งชื่อไม่มี .xlsx
         let sig = "";
-        try { sig = String.fromCharCode(...new Uint8Array(await file.slice(0, 2).arrayBuffer())); }
-        catch (e) { diag("❌ อ่านไฟล์ไม่ได้: " + e.message); setStatus("setup-status", "❌ เปิดไฟล์ไม่ได้: " + e.message + " — ถ้าเลือกจาก OneDrive ลองกด “ดาวน์โหลด/ทำให้พร้อมใช้งานออฟไลน์” ก่อน", "bad"); return; }
-        if (file.size === 0) { setStatus("setup-status", "❌ ไฟล์ว่าง (0 bytes) — ไฟล์จาก OneDrive อาจยังดาวน์โหลดไม่เสร็จ ลองเลือกใหม่", "bad"); diag("ไฟล์ 0 bytes"); return; }
-        if (sig !== "PK") {
-          const hint = /\.xls$/i.test(file.name) ? " (ไฟล์ .xls รุ่นเก่า ให้เปิดใน Excel แล้ว Save As เป็น .xlsx)" : /\.csv$/i.test(file.name) ? " (ไฟล์ .csv ให้ Save As เป็น .xlsx)" : "";
-          setStatus("setup-status", "❌ ไม่ใช่ไฟล์ .xlsx: " + file.name + hint, "bad"); diag("signature ไม่ใช่ PK: " + JSON.stringify(sig)); return;
+        try {
+          sig = String.fromCharCode(
+            ...new Uint8Array(await file.slice(0, 2).arrayBuffer()),
+          );
+        } catch (e) {
+          diag("❌ อ่านไฟล์ไม่ได้: " + e.message);
+          setStatus(
+            "setup-status",
+            "❌ เปิดไฟล์ไม่ได้: " +
+              e.message +
+              " — ถ้าเลือกจาก OneDrive ลองกด “ดาวน์โหลด/ทำให้พร้อมใช้งานออฟไลน์” ก่อน",
+            "bad",
+          );
+          return;
         }
-        state.busy = true; $("btn-pick").classList.add("disabled"); $("btn-sync").disabled = true; $("progress").style.display = "block";
+        if (file.size === 0) {
+          setStatus(
+            "setup-status",
+            "❌ ไฟล์ว่าง (0 bytes) — ไฟล์จาก OneDrive อาจยังดาวน์โหลดไม่เสร็จ ลองเลือกใหม่",
+            "bad",
+          );
+          diag("ไฟล์ 0 bytes");
+          return;
+        }
+        if (sig !== "PK") {
+          const hint = /\.xls$/i.test(file.name)
+            ? " (ไฟล์ .xls รุ่นเก่า ให้เปิดใน Excel แล้ว Save As เป็น .xlsx)"
+            : /\.csv$/i.test(file.name)
+              ? " (ไฟล์ .csv ให้ Save As เป็น .xlsx)"
+              : "";
+          setStatus(
+            "setup-status",
+            "❌ ไม่ใช่ไฟล์ .xlsx: " + file.name + hint,
+            "bad",
+          );
+          diag("signature ไม่ใช่ PK: " + JSON.stringify(sig));
+          return;
+        }
+        state.busy = true;
+        $("btn-pick").classList.add("disabled");
+        $("btn-sync").disabled = true;
+        $("progress").style.display = "block";
         setStatus("setup-status", "📄 กำลังอ่าน " + file.name + " ...", "warn");
         try {
           const t0 = performance.now();
-          const { rows, sheetName, totalRows } = await PicCore.readLinkFile(file, async (n) => {
-            setStatus("setup-status", "📄 กำลังอ่าน " + file.name + " (" + n.toLocaleString() + " แถว)", "warn");
-            if (opts.auto) setStatus("search-status", "🔄 กำลังอัปเดตไฟล์ลิงก์ (" + n.toLocaleString() + " แถว) — ระหว่างนี้ค้นด้วยข้อมูลเดิมได้", "warn");
-            await new Promise((r) => setTimeout(r, 0)); // ให้หน้าจอได้อัปเดตตัวเลข
-          });
-          if (!rows.length) throw new Error("ชีต " + sheetName + " ไม่มีแถวที่มีลิงก์รูปในคอลัมน์ B");
+          const { rows, sheetName, totalRows } = await PicCore.readLinkFile(
+            file,
+            async (n) => {
+              setStatus(
+                "setup-status",
+                "📄 กำลังอ่าน " +
+                  file.name +
+                  " (" +
+                  n.toLocaleString() +
+                  " แถว)",
+                "warn",
+              );
+              if (opts.auto)
+                setStatus(
+                  "search-status",
+                  "🔄 กำลังอัปเดตไฟล์ลิงก์ (" +
+                    n.toLocaleString() +
+                    " แถว) — ระหว่างนี้ค้นด้วยข้อมูลเดิมได้",
+                  "warn",
+                );
+              await new Promise((r) => setTimeout(r, 0)); // ให้หน้าจอได้อัปเดตตัวเลข
+            },
+          );
+          if (!rows.length)
+            throw new Error(
+              "ชีต " + sheetName + " ไม่มีแถวที่มีลิงก์รูปในคอลัมน์ B",
+            );
           const maps = PicCore.buildMaps(rows);
-          setStatus("setup-status", "💾 กำลังบันทึกลงเครื่อง (" + rows.length.toLocaleString() + " แถว) ...", "warn");
-          diag("อ่านไฟล์สำเร็จ: " + totalRows.toLocaleString() + " แถว, มีลิงก์ " + rows.length.toLocaleString() + " แถว, A=" + maps.A.size + " C=" + maps.C.size);
+          setStatus(
+            "setup-status",
+            "💾 กำลังบันทึกลงเครื่อง (" +
+              rows.length.toLocaleString() +
+              " แถว) ...",
+            "warn",
+          );
+          diag(
+            "อ่านไฟล์สำเร็จ: " +
+              totalRows.toLocaleString() +
+              " แถว, มีลิงก์ " +
+              rows.length.toLocaleString() +
+              " แถว, A=" +
+              maps.A.size +
+              " C=" +
+              maps.C.size,
+          );
           // บางเบราว์เซอร์ persist() ค้างหรือถามผู้ใช้ - รอไม่เกิน 3 วินาที
           let persisted = false;
           try {
             if (navigator.storage && navigator.storage.persist)
-              persisted = await Promise.race([navigator.storage.persist(), new Promise((r) => setTimeout(() => r(false), 3000))]);
-          } catch (e) { diag("persist(): " + e.message); }
+              persisted = await Promise.race([
+                navigator.storage.persist(),
+                new Promise((r) => setTimeout(() => r(false), 3000)),
+              ]);
+          } catch (e) {
+            diag("persist(): " + e.message);
+          }
           const meta = {
-            fileName: file.name, sheetName, totalRows, rowCount: rows.length,
-            countA: maps.A.size, countC: maps.C.size,
-            fileModified: file.lastModified || null, savedAt: Date.now(), persisted, app: APP_VERSION,
-            hasName: true, nameCount: rows.reduce((s, x) => s + (x.n ? 1 : 0), 0),
-            source: opts.source || "manual", masterTag: opts.tag || null, lastCheck: opts.source === "master" ? Date.now() : null,
+            fileName: file.name,
+            sheetName,
+            totalRows,
+            rowCount: rows.length,
+            countA: maps.A.size,
+            countC: maps.C.size,
+            fileModified: file.lastModified || null,
+            savedAt: Date.now(),
+            persisted,
+            app: APP_VERSION,
+            hasName: true,
+            nameCount: rows.reduce((s, x) => s + (x.n ? 1 : 0), 0),
+            source: opts.source || "manual",
+            masterTag: opts.tag || null,
+            lastCheck: opts.source === "master" ? Date.now() : null,
           };
           // v2.1: บันทึกลงเครื่องไม่ได้ (เช่นเปิดจากไฟล์ในเครื่อง / โหมดไม่ระบุตัวตน / พื้นที่เต็ม) ก็ยังค้นได้ในรอบนี้
           let saved = true;
-          try { await dbPut([["rows", rows.map((r) => [r.a, r.b, r.c, r.n, r.nc])], ["meta", meta]]); diag("บันทึก IndexedDB สำเร็จ, persisted=" + persisted); }
-          catch (e) { saved = false; diag("❌ บันทึก IndexedDB ไม่สำเร็จ: " + (e && e.name) + " " + (e && e.message)); }
+          try {
+            await dbPut([
+              ["rows", rows.map((r) => [r.a, r.b, r.c, r.n, r.nc])],
+              ["meta", meta],
+            ]);
+            diag("บันทึก IndexedDB สำเร็จ, persisted=" + persisted);
+          } catch (e) {
+            saved = false;
+            diag(
+              "❌ บันทึก IndexedDB ไม่สำเร็จ: " +
+                (e && e.name) +
+                " " +
+                (e && e.message),
+            );
+          }
           meta.saved = saved;
-          state.maps = maps; state.meta = meta;
+          state.maps = maps;
+          state.meta = meta;
           renderMeta();
           const secs = ((performance.now() - t0) / 1000).toFixed(1);
-          if (saved) setStatus("setup-status", "✅ บันทึกในเครื่องแล้ว " + rows.length.toLocaleString() + " แถว (" + secs + " วินาที)", "ok");
-          else setStatus("setup-status", "⚠ อ่านไฟล์สำเร็จ ค้นได้แล้ว แต่เครื่องนี้บันทึกข้อมูลไว้ไม่ได้ — ปิดแอปแล้วต้องเลือกไฟล์ใหม่ (ดูสาเหตุใน “ข้อมูลสำหรับแจ้งปัญหา”)", "warn");
+          if (saved)
+            setStatus(
+              "setup-status",
+              "✅ บันทึกในเครื่องแล้ว " +
+                rows.length.toLocaleString() +
+                " แถว (" +
+                secs +
+                " วินาที)",
+              "ok",
+            );
+          else
+            setStatus(
+              "setup-status",
+              "⚠ อ่านไฟล์สำเร็จ ค้นได้แล้ว แต่เครื่องนี้บันทึกข้อมูลไว้ไม่ได้ — ปิดแอปแล้วต้องเลือกไฟล์ใหม่ (ดูสาเหตุใน “ข้อมูลสำหรับแจ้งปัญหา”)",
+              "warn",
+            );
           if (opts.auto) {
-            setStatus("search-status", "✅ อัปเดตไฟล์ลิงก์แล้ว (" + rows.length.toLocaleString() + " แถว • ไฟล์อัปโหลดเมื่อ " + fmtDate(meta.fileModified || meta.savedAt) + ")", "ok");
+            setStatus(
+              "search-status",
+              "✅ อัปเดตไฟล์ลิงก์แล้ว (" +
+                rows.length.toLocaleString() +
+                " แถว • ไฟล์อัปโหลดเมื่อ " +
+                fmtDate(meta.fileModified || meta.savedAt) +
+                ")",
+              "ok",
+            );
             toast("✅ อัปเดตไฟล์ลิงก์ล่าสุดแล้ว");
-          } else { toast("✅ พร้อมค้นหาแล้ว"); setTimeout(goSearch, 700); }
+          } else {
+            toast("✅ พร้อมค้นหาแล้ว");
+            setTimeout(goSearch, 700);
+          }
         } catch (e) {
           console.error(e);
-          diag("❌ อ่านไฟล์ไม่สำเร็จ: " + e.message + (e.cause && e.cause.name ? " (" + e.cause.name + ")" : "") + (e.stack ? "\n" + String(e.stack).split("\n").slice(0, 4).join("\n") : ""));
-          setStatus("setup-status", "❌ อ่าน/บันทึกไฟล์ไม่สำเร็จ: " + e.message + (state.maps ? " — ยังใช้ข้อมูลเดิมค้นได้ตามปกติ" : ""), "bad");
-          if (opts.auto) setStatus("search-status", "⚠ อัปเดตไฟล์ลิงก์ไม่สำเร็จ — ยังค้นด้วยข้อมูลเดิมได้ (" + e.message + ")", "warn");
+          diag(
+            "❌ อ่านไฟล์ไม่สำเร็จ: " +
+              e.message +
+              (e.cause && e.cause.name ? " (" + e.cause.name + ")" : "") +
+              (e.stack
+                ? "\n" + String(e.stack).split("\n").slice(0, 4).join("\n")
+                : ""),
+          );
+          setStatus(
+            "setup-status",
+            "❌ อ่าน/บันทึกไฟล์ไม่สำเร็จ: " +
+              e.message +
+              (state.maps ? " — ยังใช้ข้อมูลเดิมค้นได้ตามปกติ" : ""),
+            "bad",
+          );
+          if (opts.auto)
+            setStatus(
+              "search-status",
+              "⚠ อัปเดตไฟล์ลิงก์ไม่สำเร็จ — ยังค้นด้วยข้อมูลเดิมได้ (" +
+                e.message +
+                ")",
+              "warn",
+            );
         } finally {
-          state.busy = false; $("btn-pick").classList.remove("disabled"); $("btn-sync").disabled = false; $("progress").style.display = "none";
+          state.busy = false;
+          $("btn-pick").classList.remove("disabled");
+          $("btn-sync").disabled = false;
+          $("progress").style.display = "none";
         }
       }
 
@@ -673,48 +1505,145 @@
       let syncing = false;
       async function syncMaster(manual) {
         if (syncing || state.busy) return;
-        if (!/^https?:$/.test(location.protocol)) { if (manual) setStatus("setup-status", "⚠ เปิดจากไฟล์ในเครื่อง — โหลดไฟล์มาสเตอร์ไม่ได้ ใช้ “เลือกไฟล์เอง”", "warn"); return; }
+        if (!/^https?:$/.test(location.protocol)) {
+          if (manual)
+            setStatus(
+              "setup-status",
+              "⚠ เปิดจากไฟล์ในเครื่อง — โหลดไฟล์มาสเตอร์ไม่ได้ ใช้ “เลือกไฟล์เอง”",
+              "warn",
+            );
+          return;
+        }
         if (!navigator.onLine) {
           diag("ไม่มีเน็ต — ข้ามการตรวจไฟล์มาสเตอร์");
-          if (manual) setStatus("setup-status", "📴 ไม่มีอินเทอร์เน็ต — ใช้ข้อมูลเดิมในเครื่อง", "warn");
-          if (!state.maps) setStatus("setup-status", "📴 ไม่มีอินเทอร์เน็ต — ต่อเน็ตแล้วเปิดแอปใหม่ เพื่อโหลดไฟล์ลิงก์ครั้งแรก", "bad");
+          if (manual)
+            setStatus(
+              "setup-status",
+              "📴 ไม่มีอินเทอร์เน็ต — ใช้ข้อมูลเดิมในเครื่อง",
+              "warn",
+            );
+          if (!state.maps)
+            setStatus(
+              "setup-status",
+              "📴 ไม่มีอินเทอร์เน็ต — ต่อเน็ตแล้วเปิดแอปใหม่ เพื่อโหลดไฟล์ลิงก์ครั้งแรก",
+              "bad",
+            );
           return;
         }
         syncing = true;
         const auto = !!state.maps;
         try {
-          if (!auto) setStatus("setup-status", "☁ กำลังตรวจไฟล์ลิงก์จากระบบ…", "warn");
+          if (!auto)
+            setStatus("setup-status", "☁ กำลังตรวจไฟล์ลิงก์จากระบบ…", "warn");
           let head;
-          try { head = await fetch(MASTER_URL, { method: "HEAD", cache: "no-store" }); }
-          catch (e) { diag("ตรวจไฟล์มาสเตอร์ไม่ได้: " + e.message); if (!auto) setStatus("setup-status", "❌ เชื่อมต่อระบบไม่ได้ — ลองใหม่ หรือใช้ “เลือกไฟล์เอง”", "bad"); return; }
+          try {
+            head = await fetch(MASTER_URL, {
+              method: "HEAD",
+              cache: "no-store",
+            });
+          } catch (e) {
+            diag("ตรวจไฟล์มาสเตอร์ไม่ได้: " + e.message);
+            if (!auto)
+              setStatus(
+                "setup-status",
+                "❌ เชื่อมต่อระบบไม่ได้ — ลองใหม่ หรือใช้ “เลือกไฟล์เอง”",
+                "bad",
+              );
+            return;
+          }
           if (head.status === 404) {
             diag("ไม่พบไฟล์มาสเตอร์ (" + MASTER_URL + ") บนระบบ");
-            if (!auto || manual) setStatus("setup-status", "⚠ ยังไม่มีไฟล์มาสเตอร์บนระบบ — ใช้ “เลือกไฟล์เอง” ไปก่อน", "warn");
+            if (!auto || manual)
+              setStatus(
+                "setup-status",
+                "⚠ ยังไม่มีไฟล์มาสเตอร์บนระบบ — ใช้ “เลือกไฟล์เอง” ไปก่อน",
+                "warn",
+              );
             return;
           }
-          if (!head.ok) { diag("ตรวจไฟล์มาสเตอร์: HTTP " + head.status); if (!auto) setStatus("setup-status", "❌ ตรวจไฟล์ไม่ได้ (HTTP " + head.status + ")", "bad"); return; }
+          if (!head.ok) {
+            diag("ตรวจไฟล์มาสเตอร์: HTTP " + head.status);
+            if (!auto)
+              setStatus(
+                "setup-status",
+                "❌ ตรวจไฟล์ไม่ได้ (HTTP " + head.status + ")",
+                "bad",
+              );
+            return;
+          }
           const lm = head.headers.get("last-modified");
-          const tag = head.headers.get("etag") || lm || head.headers.get("content-length") || "";
-          diag("ไฟล์มาสเตอร์: tag=" + tag + " | ในเครื่อง=" + (state.meta && state.meta.masterTag));
-          if (state.meta && state.meta.masterTag && state.meta.masterTag === tag && state.meta.hasName) {
-            state.meta.lastCheck = Date.now(); renderMeta();
-            try { await dbPut([["meta", state.meta]]); } catch (e) {}
-            if (manual) setStatus("setup-status", "✅ ไฟล์ลิงก์ในเครื่องเป็นเวอร์ชันล่าสุดแล้ว", "ok");
+          const tag =
+            head.headers.get("etag") ||
+            lm ||
+            head.headers.get("content-length") ||
+            "";
+          diag(
+            "ไฟล์มาสเตอร์: tag=" +
+              tag +
+              " | ในเครื่อง=" +
+              (state.meta && state.meta.masterTag),
+          );
+          if (
+            state.meta &&
+            state.meta.masterTag &&
+            state.meta.masterTag === tag &&
+            state.meta.hasName
+          ) {
+            state.meta.lastCheck = Date.now();
+            renderMeta();
+            try {
+              await dbPut([["meta", state.meta]]);
+            } catch (e) {}
+            if (manual)
+              setStatus(
+                "setup-status",
+                "✅ ไฟล์ลิงก์ในเครื่องเป็นเวอร์ชันล่าสุดแล้ว",
+                "ok",
+              );
             return;
           }
-          if (!auto) setStatus("setup-status", "☁ กำลังดาวน์โหลดไฟล์ลิงก์จากระบบ…", "warn");
-          else setStatus("search-status", "☁ พบไฟล์ลิงก์ใหม่ กำลังดาวน์โหลด — ระหว่างนี้ค้นด้วยข้อมูลเดิมได้", "warn");
+          if (!auto)
+            setStatus(
+              "setup-status",
+              "☁ กำลังดาวน์โหลดไฟล์ลิงก์จากระบบ…",
+              "warn",
+            );
+          else
+            setStatus(
+              "search-status",
+              "☁ พบไฟล์ลิงก์ใหม่ กำลังดาวน์โหลด — ระหว่างนี้ค้นด้วยข้อมูลเดิมได้",
+              "warn",
+            );
           const res = await fetch(MASTER_URL, { cache: "no-store" });
-          if (!res.ok) throw new Error("ดาวน์โหลดไม่สำเร็จ (HTTP " + res.status + ")");
+          if (!res.ok)
+            throw new Error("ดาวน์โหลดไม่สำเร็จ (HTTP " + res.status + ")");
           const blob = await res.blob();
           const lm2 = res.headers.get("last-modified") || lm;
-          const file = new File([blob], MASTER_URL, { lastModified: (lm2 && Date.parse(lm2)) || Date.now() });
-          await importFile(file, { source: "master", tag: res.headers.get("etag") || tag, auto });
+          const file = new File([blob], MASTER_URL, {
+            lastModified: (lm2 && Date.parse(lm2)) || Date.now(),
+          });
+          await importFile(file, {
+            source: "master",
+            tag: res.headers.get("etag") || tag,
+            auto,
+          });
         } catch (e) {
           diag("❌ ไฟล์มาสเตอร์: " + e.message);
-          if (auto) setStatus("search-status", "⚠ อัปเดตไฟล์ลิงก์ไม่สำเร็จ — ยังค้นด้วยข้อมูลเดิมได้", "warn");
-          else setStatus("setup-status", "❌ " + e.message + " — ลองใหม่ หรือใช้ “เลือกไฟล์เอง”", "bad");
-        } finally { syncing = false; }
+          if (auto)
+            setStatus(
+              "search-status",
+              "⚠ อัปเดตไฟล์ลิงก์ไม่สำเร็จ — ยังค้นด้วยข้อมูลเดิมได้",
+              "warn",
+            );
+          else
+            setStatus(
+              "setup-status",
+              "❌ " + e.message + " — ลองใหม่ หรือใช้ “เลือกไฟล์เอง”",
+              "bad",
+            );
+        } finally {
+          syncing = false;
+        }
       }
 
       async function loadStored() {
@@ -723,12 +1652,21 @@
           if (!meta) return false;
           const packed = await dbGet("rows");
           if (!packed || !packed.length) return false;
-          state.maps = PicCore.buildMaps(packed.map((x) => ({ a: x[0], b: x[1], c: x[2], n: x[3] || "", nc: x[4] || "" })));
+          state.maps = PicCore.buildMaps(
+            packed.map((x) => ({
+              a: x[0],
+              b: x[1],
+              c: x[2],
+              n: x[3] || "",
+              nc: x[4] || "",
+            })),
+          );
           // persist อาจเปลี่ยนหลังติดตั้งเป็นแอป -> เช็กใหม่ทุกครั้ง
           try {
             if (navigator.storage && navigator.storage.persisted) {
               meta.persisted = await navigator.storage.persisted();
-              if (!meta.persisted && navigator.storage.persist) meta.persisted = await navigator.storage.persist();
+              if (!meta.persisted && navigator.storage.persist)
+                meta.persisted = await navigator.storage.persist();
             }
           } catch (e) {}
           state.meta = meta;
@@ -741,23 +1679,66 @@
 
       // ================= ค้นหา =================
       function doSearch(raw) {
-        if (!state.maps) { goSetup(); return; }
+        if (!state.maps) {
+          goSetup();
+          return;
+        }
         const code = PicCore.cleanCode(raw);
-        if (!code) { setStatus("search-status", "กรุณาใส่รหัส AMOS หรือรหัส AS400", "bad"); return; }
+        if (!code) {
+          setStatus("search-status", "กรุณาใส่รหัสสินค้า", "bad");
+          return;
+        }
         setStatus("search-status", "");
         const hit = PicCore.search(state.maps, code);
         const steps = [];
-        const keysA = PicCore.lookupKeys(code, "A").join(" / "), keysC = PicCore.lookupKeys(code, "C").join(" / ");
+        const keysA = PicCore.lookupKeys(code, "A").join(" / "),
+          keysC = PicCore.lookupKeys(code, "C").join(" / ");
         if (hit) {
-          if (hit.col === "C") steps.push(["", "คอลัมน์ A: ไม่พบ " + keysA + " → ค้นคอลัมน์ C ต่อ"]);
-          steps.push(["g", "คอลัมน์ " + hit.col + ": พบ " + hit.key + " → ใช้ลิงก์คอลัมน์ B (" + hit.images.length + " รูป)"]);
-          steps.push(["", hit.name ? "ชื่อสินค้า: จากคอลัมน์ " + hit.nameCol + (hit.nameCol === "D" ? " (คอลัมน์ E ว่าง)" : "") : "ชื่อสินค้า: คอลัมน์ E และ D ว่าง"]);
+          if (hit.col === "C")
+            steps.push([
+              "",
+              "คอลัมน์ A: ไม่พบ " + keysA + " → ค้นคอลัมน์ C ต่อ",
+            ]);
+          steps.push([
+            "g",
+            "คอลัมน์ " +
+              hit.col +
+              ": พบ " +
+              hit.key +
+              " → ใช้ลิงก์คอลัมน์ B (" +
+              hit.images.length +
+              " รูป)",
+          ]);
+          steps.push([
+            "",
+            hit.name
+              ? "ชื่อสินค้า: จากคอลัมน์ " +
+                hit.nameCol +
+                (hit.nameCol === "D" ? " (คอลัมน์ E ว่าง)" : "")
+              : "ชื่อสินค้า: คอลัมน์ E และ D ว่าง",
+          ]);
         } else {
           steps.push(["w", "คอลัมน์ A: ไม่พบ " + keysA]);
-          steps.push(["w", "คอลัมน์ C: ไม่พบ " + keysC + " (หรือพบแต่คอลัมน์ B ว่าง) → ไม่พบรูป"]);
+          steps.push([
+            "w",
+            "คอลัมน์ C: ไม่พบ " +
+              keysC +
+              " (หรือพบแต่คอลัมน์ B ว่าง) → ไม่พบรูป",
+          ]);
         }
-        steps.push(["", "ไฟล์: " + state.meta.fileName + " [" + state.meta.sheetName + "] (โหลดเมื่อ " + fmtDate(state.meta.savedAt) + ")"]);
-        const r = hit ? { code, found: true, ...hit, steps } : { code, found: false, images: [], steps };
+        steps.push([
+          "",
+          "ไฟล์: " +
+            state.meta.fileName +
+            " [" +
+            state.meta.sheetName +
+            "] (โหลดเมื่อ " +
+            fmtDate(state.meta.savedAt) +
+            ")",
+        ]);
+        const r = hit
+          ? { code, found: true, ...hit, steps }
+          : { code, found: false, images: [], steps };
         addHistory(r);
         render(r);
         $("code").blur(); // ซ่อนคีย์บอร์ดให้เห็นรูป
@@ -769,45 +1750,85 @@
       // เบราว์เซอร์จะไม่ยอมให้วาดรูปลง canvas แล้ว export (tainted canvas) -> ใช้วิธีสำรอง (รูป + ป้ายรหัส HTML)
       const compCache = new Map(); // key = url + "\n" + label -> { promise, result: {blob, objUrl} | null, error }
       function clearCompCache() {
-        for (const v of compCache.values()) if (v.result) URL.revokeObjectURL(v.result.objUrl);
+        for (const v of compCache.values())
+          if (v.result) URL.revokeObjectURL(v.result.objUrl);
         compCache.clear();
       }
       function loadImageFromBlob(blob) {
         return new Promise((res, rej) => {
-          const u = URL.createObjectURL(blob), im = new Image();
+          const u = URL.createObjectURL(blob),
+            im = new Image();
           im.onload = () => res({ im, u });
-          im.onerror = () => { URL.revokeObjectURL(u); rej(new Error("ไฟล์ที่ได้ไม่ใช่รูปภาพ")); };
+          im.onerror = () => {
+            URL.revokeObjectURL(u);
+            rej(new Error("ไฟล์ที่ได้ไม่ใช่รูปภาพ"));
+          };
           im.src = u;
         });
       }
       // ตัดข้อความเป็นบรรทัดตามความกว้าง: ภาษาไทยไม่มีเว้นวรรคระหว่างคำ -> ใช้ Intl.Segmenter("th") ตัดเป็นคำ
       // (Safari 14.1+/Chrome 87+) ถ้าไม่มีใช้ช่องว่าง ; คำที่ยาวเกินบรรทัดตัดทีละตัวอักษร (ไม่แยกสระ/วรรณยุกต์ออกจากพยัญชนะ)
       function graphemes(s) {
-        if (window.Intl && Intl.Segmenter) return [...new Intl.Segmenter("th", { granularity: "grapheme" }).segment(s)].map((x) => x.segment);
-        return s.match(/[^\u0E31\u0E34-\u0E3A\u0E47-\u0E4E][\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]*/g) || [];
+        if (window.Intl && Intl.Segmenter)
+          return [
+            ...new Intl.Segmenter("th", { granularity: "grapheme" }).segment(s),
+          ].map((x) => x.segment);
+        return (
+          s.match(
+            /[^\u0E31\u0E34-\u0E3A\u0E47-\u0E4E][\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]*/g,
+          ) || []
+        );
       }
       function wrapText(g, text, maxW, maxLines) {
-        const rawWords = window.Intl && Intl.Segmenter
-          ? [...new Intl.Segmenter("th", { granularity: "word" }).segment(text)].map((x) => x.segment)
-          : text.split(/(\s+)/);
+        const rawWords =
+          window.Intl && Intl.Segmenter
+            ? [
+                ...new Intl.Segmenter("th", { granularity: "word" }).segment(
+                  text,
+                ),
+              ].map((x) => x.segment)
+            : text.split(/(\s+)/);
         // ไม่ให้บรรทัดขึ้นต้นด้วยเครื่องหมายปิด (เช่น "มล." แล้ว "." หลุดบรรทัด) และไม่ให้วงเล็บเปิดค้างท้ายบรรทัด
         const words = [];
         let pendOpen = "";
         for (const t of rawWords) {
           if (!t) continue;
-          if (/^[.,:;!?%)\]}…”’ๆฯ]+$/.test(t) && words.length) { words[words.length - 1] += t; continue; }
-          if (/^[(\[{“‘#]+$/.test(t)) { pendOpen += t; continue; }
-          words.push(pendOpen + t); pendOpen = "";
+          if (/^[.,:;!?%)\]}…”’ๆฯ]+$/.test(t) && words.length) {
+            words[words.length - 1] += t;
+            continue;
+          }
+          if (/^[(\[{“‘#]+$/.test(t)) {
+            pendOpen += t;
+            continue;
+          }
+          words.push(pendOpen + t);
+          pendOpen = "";
         }
         if (pendOpen) words.push(pendOpen);
-        const lines = []; let cur = "";
-        const push = (s) => { lines.push(s.trim()); };
+        const lines = [];
+        let cur = "";
+        const push = (s) => {
+          lines.push(s.trim());
+        };
         for (const w of words) {
-          if (g.measureText(cur + w).width <= maxW) { cur += w; continue; }
-          if (cur.trim()) { push(cur); cur = ""; }
-          if (g.measureText(w).width <= maxW) { cur = w.replace(/^\s+/, ""); continue; }
-          for (const ch of graphemes(w)) {          // คำเดียวยาวเกินบรรทัด
-            if (g.measureText(cur + ch).width > maxW && cur) { push(cur); cur = ""; }
+          if (g.measureText(cur + w).width <= maxW) {
+            cur += w;
+            continue;
+          }
+          if (cur.trim()) {
+            push(cur);
+            cur = "";
+          }
+          if (g.measureText(w).width <= maxW) {
+            cur = w.replace(/^\s+/, "");
+            continue;
+          }
+          for (const ch of graphemes(w)) {
+            // คำเดียวยาวเกินบรรทัด
+            if (g.measureText(cur + ch).width > maxW && cur) {
+              push(cur);
+              cur = "";
+            }
             cur += ch;
           }
         }
@@ -815,7 +1836,8 @@
         if (lines.length > maxLines) {
           const keep = lines.slice(0, maxLines);
           let last = keep[maxLines - 1];
-          while (last && g.measureText(last + "…").width > maxW) last = graphemes(last).slice(0, -1).join("");
+          while (last && g.measureText(last + "…").width > maxW)
+            last = graphemes(last).slice(0, -1).join("");
           keep[maxLines - 1] = last + "…";
           return keep;
         }
@@ -823,43 +1845,89 @@
       }
       async function composeImage(url, label, name) {
         let resp;
-        try { resp = await fetch(url, { mode: "cors", credentials: "omit", referrerPolicy: "no-referrer", cache: "force-cache" }); }
-        catch (e) { const err = new Error("เซิร์ฟเวอร์รูปไม่อนุญาตให้แอปอ่านรูป (CORS) หรือไม่มีเน็ต"); err.code = "CORS"; throw err; }
-        if (!resp.ok) throw new Error("โหลดรูปไม่ได้ (HTTP " + resp.status + ")");
+        try {
+          resp = await fetch(url, {
+            mode: "cors",
+            credentials: "omit",
+            referrerPolicy: "no-referrer",
+            cache: "force-cache",
+          });
+        } catch (e) {
+          const err = new Error(
+            "เซิร์ฟเวอร์รูปไม่อนุญาตให้แอปอ่านรูป (CORS) หรือไม่มีเน็ต",
+          );
+          err.code = "CORS";
+          throw err;
+        }
+        if (!resp.ok)
+          throw new Error("โหลดรูปไม่ได้ (HTTP " + resp.status + ")");
         const { im, u } = await loadImageFromBlob(await resp.blob());
         try {
-          const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height;
+          const iw = im.naturalWidth || im.width,
+            ih = im.naturalHeight || im.height;
           if (!iw || !ih) throw new Error("ขนาดรูปไม่ถูกต้อง");
-          const W = Math.round(Math.min(1200, Math.max(600, iw)));    // รูปเล็กขยายให้ตัวหนังสืออ่านง่าย / รูปใหญ่ย่อ
+          const W = Math.round(Math.min(1200, Math.max(600, iw))); // รูปเล็กขยายให้ตัวหนังสืออ่านง่าย / รูปใหญ่ย่อ
           const imgH = Math.round(ih * (W / iw));
           // v2.6: แถบล่าง = รหัส (บรรทัดแรก ตัวหนา) + ชื่อสินค้า (สูงสุด 3 บรรทัด) ตัวอักษรเล็กลงจาก v2.5
-          const pad = Math.round(W * 0.028), gap = Math.round(W * 0.01), maxTW = W - pad * 2;
-          const mono = (s) => "bold " + s + "px ui-monospace, Menlo, Consolas, 'Courier New', monospace";
-          const sans = (s) => s + "px 'Sukhumvit Set', 'Noto Sans Thai', 'Leelawadee UI', Tahoma, sans-serif";
-          const mg = document.createElement("canvas").getContext("2d");   // ใช้วัดความกว้างตัวอักษรก่อนวาดจริง
+          const pad = Math.round(W * 0.028),
+            gap = Math.round(W * 0.01),
+            maxTW = W - pad * 2;
+          const mono = (s) =>
+            "bold " +
+            s +
+            "px ui-monospace, Menlo, Consolas, 'Courier New', monospace";
+          const sans = (s) =>
+            s +
+            "px 'Sukhumvit Set', 'Noto Sans Thai', 'Leelawadee UI', Tahoma, sans-serif";
+          const mg = document.createElement("canvas").getContext("2d"); // ใช้วัดความกว้างตัวอักษรก่อนวาดจริง
           let codeFs = Math.round(W * 0.04);
           mg.font = mono(codeFs);
-          while (codeFs > 10 && mg.measureText(label).width > maxTW) { codeFs -= 2; mg.font = mono(codeFs); }
-          const nameFs = Math.round(W * 0.032), lineH = Math.round(nameFs * 1.4);
+          while (codeFs > 10 && mg.measureText(label).width > maxTW) {
+            codeFs -= 2;
+            mg.font = mono(codeFs);
+          }
+          const nameFs = Math.round(W * 0.032),
+            lineH = Math.round(nameFs * 1.4);
           mg.font = sans(nameFs);
           const lines = name ? wrapText(mg, name, maxTW, 3) : [];
-          const band = pad + Math.round(codeFs * 1.25) + (lines.length ? gap + lines.length * lineH : 0) + pad;
+          const band =
+            pad +
+            Math.round(codeFs * 1.25) +
+            (lines.length ? gap + lines.length * lineH : 0) +
+            pad;
           const c = document.createElement("canvas");
-          c.width = W; c.height = imgH + band;
+          c.width = W;
+          c.height = imgH + band;
           const g = c.getContext("2d");
-          g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+          g.fillStyle = "#fff";
+          g.fillRect(0, 0, c.width, c.height);
           g.imageSmoothingQuality = "high";
           g.drawImage(im, 0, 0, W, imgH);
-          g.fillStyle = "#e4e1f7"; g.fillRect(0, imgH, W, Math.max(1, Math.round(W * 0.002)));
-          g.textAlign = "center"; g.textBaseline = "top";
+          g.fillStyle = "#e4e1f7";
+          g.fillRect(0, imgH, W, Math.max(1, Math.round(W * 0.002)));
+          g.textAlign = "center";
+          g.textBaseline = "top";
           let y = imgH + pad;
-          g.fillStyle = "#2b2a3d"; g.font = mono(codeFs); g.fillText(label, W / 2, y);
+          g.fillStyle = "#2b2a3d";
+          g.font = mono(codeFs);
+          g.fillText(label, W / 2, y);
           y += Math.round(codeFs * 1.25) + gap;
-          g.fillStyle = "#4a4868"; g.font = sans(nameFs);
-          for (const ln of lines) { g.fillText(ln, W / 2, y); y += lineH; }
-          const blob = await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error("สร้างรูปไม่สำเร็จ"))), "image/png"));
+          g.fillStyle = "#4a4868";
+          g.font = sans(nameFs);
+          for (const ln of lines) {
+            g.fillText(ln, W / 2, y);
+            y += lineH;
+          }
+          const blob = await new Promise((res, rej) =>
+            c.toBlob(
+              (b) => (b ? res(b) : rej(new Error("สร้างรูปไม่สำเร็จ"))),
+              "image/png",
+            ),
+          );
           return { blob, objUrl: URL.createObjectURL(blob) };
-        } finally { URL.revokeObjectURL(u); }
+        } finally {
+          URL.revokeObjectURL(u);
+        }
       }
       function getComposite(url, label, name) {
         name = name || "";
@@ -868,61 +1936,121 @@
         if (!v) {
           v = { result: null, error: null };
           v.promise = composeImage(url, label, name).then(
-            (r) => { v.result = r; diag("รวมรูป+รหัสสำเร็จ (" + Math.round(r.blob.size / 1024) + " KB)"); return r; },
-            (e) => { v.error = e; diag("รวมรูป+รหัสไม่ได้: " + e.message + " | " + url.slice(0, 80)); throw e; });
+            (r) => {
+              v.result = r;
+              diag(
+                "รวมรูป+รหัสสำเร็จ (" + Math.round(r.blob.size / 1024) + " KB)",
+              );
+              return r;
+            },
+            (e) => {
+              v.error = e;
+              diag(
+                "รวมรูป+รหัสไม่ได้: " + e.message + " | " + url.slice(0, 80),
+              );
+              throw e;
+            },
+          );
           compCache.set(key, v);
         }
         return v;
       }
-      function safeFileName(s) { return String(s).replace(/[^\w\-()]+/g, "_").slice(0, 60) + ".png"; }
-      function viewerUrl(u, l, n) { return location.origin + location.pathname + "#view=" + encodeURIComponent(JSON.stringify({ u, l, n: n || "" })); }
+      function safeFileName(s) {
+        return (
+          String(s)
+            .replace(/[^\w\-()]+/g, "_")
+            .slice(0, 60) + ".png"
+        );
+      }
+      function viewerUrl(u, l, n) {
+        return (
+          location.origin +
+          location.pathname +
+          "#view=" +
+          encodeURIComponent(JSON.stringify({ u, l, n: n || "" }))
+        );
+      }
 
-      let current = null, currentImg = 0;
+      let current = null,
+        currentImg = 0;
       function render(r) {
         clearCompCache();
-        current = r; currentImg = 0;
+        current = r;
+        currentImg = 0;
         const box = $("result");
-        box.innerHTML = ""; show("result", true);
-        const head = document.createElement("div"); head.className = "result-head";
+        box.innerHTML = "";
+        show("result", true);
+        const head = document.createElement("div");
+        head.className = "result-head";
         const src = document.createElement("span");
         src.className = "src " + (r.found ? "found" : "none");
         src.textContent = r.found ? "✅ พบในคอลัมน์ " + r.col : "❌ ไม่พบรูป";
         const codeEl = document.createElement("div");
         codeEl.style.cssText = "font-family:var(--mono);font-weight:700";
         codeEl.textContent = r.code;
-        head.append(codeEl, src); box.appendChild(head);
+        head.append(codeEl, src);
+        box.appendChild(head);
 
         if (r.found) {
-          const imgbox = document.createElement("div"); imgbox.className = "imgbox";
+          const imgbox = document.createElement("div");
+          imgbox.className = "imgbox";
           const img = document.createElement("img");
-          img.id = "main-img"; img.alt = r.label; img.referrerPolicy = "no-referrer";
+          img.id = "main-img";
+          img.alt = r.label;
+          img.referrerPolicy = "no-referrer";
           img.onerror = () => {
-            const d = document.createElement("div"); d.className = "status bad"; d.id = "main-img";
-            d.textContent = navigator.onLine ? "โหลดรูปไม่ได้ (ลิงก์เสีย หรือเครือข่ายบล็อก) — ลองกด “เปิดรูป”" : "📴 ไม่มีอินเทอร์เน็ต — ต่อเน็ตแล้วค้นใหม่เพื่อโหลดรูป";
+            const d = document.createElement("div");
+            d.className = "status bad";
+            d.id = "main-img";
+            d.textContent = navigator.onLine
+              ? "โหลดรูปไม่ได้ (ลิงก์เสีย หรือเครือข่ายบล็อก) — ลองกด “เปิดรูป”"
+              : "📴 ไม่มีอินเทอร์เน็ต — ต่อเน็ตแล้วค้นใหม่เพื่อโหลดรูป";
             img.replaceWith(d);
           };
           img.src = r.images[0];
-          const lab = document.createElement("div"); lab.id = "img-label";
-          const labCode = document.createElement("div"); labCode.className = "imglabel"; labCode.textContent = r.label;
+          const lab = document.createElement("div");
+          lab.id = "img-label";
+          const labCode = document.createElement("div");
+          labCode.className = "imglabel";
+          labCode.textContent = r.label;
           lab.appendChild(labCode);
-          if (r.name) { const labName = document.createElement("div"); labName.className = "imgname"; labName.textContent = r.name; lab.appendChild(labName); }
-          const baked = document.createElement("div"); baked.className = "baked hidden"; baked.id = "img-baked";
-          baked.textContent = "✅ รหัส + ชื่อสินค้าอยู่ในรูปแล้ว — กดค้างที่รูปเพื่อคัดลอก/บันทึก จะได้ไปด้วย";
-          imgbox.append(img, lab, baked); box.appendChild(imgbox);
+          if (r.name) {
+            const labName = document.createElement("div");
+            labName.className = "imgname";
+            labName.textContent = r.name;
+            lab.appendChild(labName);
+          }
+          const baked = document.createElement("div");
+          baked.className = "baked hidden";
+          baked.id = "img-baked";
+          baked.textContent =
+            "✅ รหัส + ชื่อสินค้าอยู่ในรูปแล้ว — กดค้างที่รูปเพื่อคัดลอก/บันทึก จะได้ไปด้วย";
+          imgbox.append(img, lab, baked);
+          box.appendChild(imgbox);
           showComposite(r, 0);
 
           if (r.images.length > 1) {
-            const th = document.createElement("div"); th.className = "thumbs";
+            const th = document.createElement("div");
+            th.className = "thumbs";
             r.images.forEach((u, i) => {
               const t = document.createElement("img");
-              t.src = u; t.referrerPolicy = "no-referrer"; t.alt = "รูปที่ " + (i + 1);
+              t.src = u;
+              t.referrerPolicy = "no-referrer";
+              t.alt = "รูปที่ " + (i + 1);
               if (i === 0) t.classList.add("active");
               t.onclick = () => {
                 currentImg = i;
-                const m = $("main-img"); if (m && m.tagName === "IMG") { m.src = u; show("img-label", true); show("img-baked", false); }
+                const m = $("main-img");
+                if (m && m.tagName === "IMG") {
+                  m.src = u;
+                  show("img-label", true);
+                  show("img-baked", false);
+                }
                 showComposite(r, i);
                 $("img-url").textContent = u;
-                th.querySelectorAll("img").forEach((x) => x.classList.remove("active"));
+                th.querySelectorAll("img").forEach((x) =>
+                  x.classList.remove("active"),
+                );
                 t.classList.add("active");
               };
               th.appendChild(t);
@@ -930,80 +2058,155 @@
             box.appendChild(th);
           }
 
-          const actions = document.createElement("div"); actions.className = "row"; actions.style.marginTop = "10px";
+          const actions = document.createElement("div");
+          actions.className = "row";
+          actions.style.marginTop = "10px";
           // v2.3: เปิดรูปในแท็บใหม่ = เปิดหน้าดูรูปของแอปเอง (มีรหัสติดไปด้วย) แทนการเปิดลิงก์รูปเปล่า
-          const bOpen = document.createElement("button"); bOpen.className = "btn secondary"; bOpen.textContent = "↗ เปิดรูป";
-          bOpen.onclick = () => window.open(viewerUrl(r.images[currentImg], r.label, r.name), "_blank");
+          const bOpen = document.createElement("button");
+          bOpen.className = "btn secondary";
+          bOpen.textContent = "↗ เปิดรูป";
+          bOpen.onclick = () =>
+            window.open(
+              viewerUrl(r.images[currentImg], r.label, r.name),
+              "_blank",
+            );
           actions.appendChild(bOpen);
 
           box.appendChild(actions);
-          const tip = document.createElement("div"); tip.className = "tip"; tip.id = "img-tip";
+          const tip = document.createElement("div");
+          tip.className = "tip";
+          tip.id = "img-tip";
           tip.textContent = "⏳ กำลังเตรียมรูปที่มีรหัสในตัว…";
           box.appendChild(tip);
-          const url = document.createElement("div"); url.className = "url"; url.id = "img-url"; url.textContent = r.images[0];
+          const url = document.createElement("div");
+          url.className = "url";
+          url.id = "img-url";
+          url.textContent = r.images[0];
           box.appendChild(url);
         } else {
-          const e = document.createElement("div"); e.className = "result-empty";
+          const e = document.createElement("div");
+          e.className = "result-empty";
           e.textContent = "ไม่พบรหัสนี้ทั้งคอลัมน์ A และ C ในไฟล์ลิงก์";
           box.appendChild(e);
         }
 
-        const det = document.createElement("details"); det.className = "steps";
-        const sum = document.createElement("summary"); sum.textContent = "รายละเอียดการค้น";
-        const st = document.createElement("div"); st.className = "box";
-        r.steps.forEach(([cls, t]) => { const d = document.createElement("div"); if (cls) d.className = cls; d.textContent = t; st.appendChild(d); });
-        det.append(sum, st); box.appendChild(det);
+        const det = document.createElement("details");
+        det.className = "steps";
+        const sum = document.createElement("summary");
+        sum.textContent = "รายละเอียดการค้น";
+        const st = document.createElement("div");
+        st.className = "box";
+        r.steps.forEach(([cls, t]) => {
+          const d = document.createElement("div");
+          if (cls) d.className = cls;
+          d.textContent = t;
+          st.appendChild(d);
+        });
+        det.append(sum, st);
+        box.appendChild(det);
       }
 
       function showComposite(r, i) {
-        const u = r.images[i], v = getComposite(u, r.label, r.name);
-        v.promise.then((res) => {
-          if (current !== r || currentImg !== i) return; // ผู้ใช้ค้นใหม่/เปลี่ยนรูปไปแล้ว
-          const m = $("main-img");
-          if (m && m.tagName === "IMG") { m.onerror = null; m.src = res.objUrl; }
-          show("img-label", false); show("img-baked", true);
-          const t = $("img-tip"); if (t) t.textContent = "💡 กดค้างที่รูป → คัดลอก / บันทึก / แชร์ ได้รูปพร้อมรหัสและชื่อสินค้า";
-        }, (e) => {
-          if (current !== r || currentImg !== i) return;
-          const t = $("img-tip");
-          if (t) t.textContent = "⚠ รูปจากเว็บนี้ใส่รหัสลงในรูปไม่ได้ (" + e.message + ") — กด “เปิดรูป” แล้วแคปหน้าจอ จะได้ทั้งรูปและรหัส";
-        });
+        const u = r.images[i],
+          v = getComposite(u, r.label, r.name);
+        v.promise.then(
+          (res) => {
+            if (current !== r || currentImg !== i) return; // ผู้ใช้ค้นใหม่/เปลี่ยนรูปไปแล้ว
+            const m = $("main-img");
+            if (m && m.tagName === "IMG") {
+              m.onerror = null;
+              m.src = res.objUrl;
+            }
+            show("img-label", false);
+            show("img-baked", true);
+            const t = $("img-tip");
+            if (t)
+              t.textContent =
+                "💡 กดค้างที่รูป → คัดลอก / บันทึก / แชร์ ได้รูปพร้อมรหัสและชื่อสินค้า";
+          },
+          (e) => {
+            if (current !== r || currentImg !== i) return;
+            const t = $("img-tip");
+            if (t)
+              t.textContent =
+                "⚠ รูปจากเว็บนี้ใส่รหัสลงในรูปไม่ได้ (" +
+                e.message +
+                ") — กด “เปิดรูป” แล้วแคปหน้าจอ จะได้ทั้งรูปและรหัส";
+          },
+        );
       }
 
       // ================= v2.3: หน้าดูรูป (#view=...) เปิดจากปุ่ม "เปิดรูป" =================
       function renderViewer() {
         let data;
-        try { data = JSON.parse(decodeURIComponent(location.hash.slice(6))); } catch (e) { data = null; }
+        try {
+          data = JSON.parse(decodeURIComponent(location.hash.slice(6)));
+        } catch (e) {
+          data = null;
+        }
         document.body.className = "viewer";
         document.body.innerHTML = "";
-        const wrap = document.createElement("div"); wrap.className = "viewer-wrap";
-        if (!data || !data.u) { wrap.textContent = "ลิงก์ไม่ถูกต้อง"; document.body.appendChild(wrap); return; }
+        const wrap = document.createElement("div");
+        wrap.className = "viewer-wrap";
+        if (!data || !data.u) {
+          wrap.textContent = "ลิงก์ไม่ถูกต้อง";
+          document.body.appendChild(wrap);
+          return;
+        }
         document.title = (data.l || "รูปสินค้า") + (data.n ? " " + data.n : "");
-        const img = document.createElement("img"); img.alt = data.l || ""; img.referrerPolicy = "no-referrer"; img.src = data.u;
+        const img = document.createElement("img");
+        img.alt = data.l || "";
+        img.referrerPolicy = "no-referrer";
+        img.src = data.u;
         const lab = document.createElement("div");
-        const labCode = document.createElement("div"); labCode.className = "imglabel"; labCode.textContent = data.l || ""; lab.appendChild(labCode);
-        if (data.n) { const labName = document.createElement("div"); labName.className = "imgname"; labName.textContent = data.n; lab.appendChild(labName); }
-        const tip = document.createElement("div"); tip.className = "tip"; tip.textContent = "⏳ กำลังใส่รหัสลงในรูป…";
-        wrap.append(img, lab, tip); document.body.appendChild(wrap);
-        composeImage(data.u, data.l || "", data.n || "").then((res) => {
-          img.src = res.objUrl; lab.remove();
-          tip.textContent = "💡 กดค้าง/คลิกขวาที่รูป → คัดลอก หรือบันทึกรูป (มีรหัสในรูปแล้ว)";
-        }, () => {
-          tip.textContent = "💡 แคปหน้าจอหน้านี้ จะได้ทั้งรูปและรหัส (เว็บรูปไม่อนุญาตให้ใส่รหัสลงในไฟล์รูป)";
-        });
+        const labCode = document.createElement("div");
+        labCode.className = "imglabel";
+        labCode.textContent = data.l || "";
+        lab.appendChild(labCode);
+        if (data.n) {
+          const labName = document.createElement("div");
+          labName.className = "imgname";
+          labName.textContent = data.n;
+          lab.appendChild(labName);
+        }
+        const tip = document.createElement("div");
+        tip.className = "tip";
+        tip.textContent = "⏳ กำลังใส่รหัสลงในรูป…";
+        wrap.append(img, lab, tip);
+        document.body.appendChild(wrap);
+        composeImage(data.u, data.l || "", data.n || "").then(
+          (res) => {
+            img.src = res.objUrl;
+            lab.remove();
+            tip.textContent =
+              "💡 กดค้าง/คลิกขวาที่รูป → คัดลอก หรือบันทึกรูป (มีรหัสในรูปแล้ว)";
+          },
+          () => {
+            tip.textContent =
+              "💡 แคปหน้าจอหน้านี้ จะได้ทั้งรูปและรหัส (เว็บรูปไม่อนุญาตให้ใส่รหัสลงในไฟล์รูป)";
+          },
+        );
       }
 
       // ================= ประวัติการค้น (จำไว้ในเครื่อง) =================
       const HIST_KEY = "picSearchHistory";
       let history = [];
-      try { history = JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); } catch (e) { history = []; }
+      try {
+        history = JSON.parse(localStorage.getItem(HIST_KEY) || "[]");
+      } catch (e) {
+        history = [];
+      }
       function renderHistory() {
-        const box = $("history"); box.innerHTML = "";
+        const box = $("history");
+        box.innerHTML = "";
         history.forEach((h) => {
           const c = document.createElement("span");
           c.className = "chip" + (h.found ? "" : " nf");
           c.textContent = h.code;
-          c.onclick = () => { $("code").value = h.code; doSearch(h.code); };
+          c.onclick = () => {
+            $("code").value = h.code;
+            doSearch(h.code);
+          };
           box.appendChild(c);
         });
       }
@@ -1011,19 +2214,39 @@
         history = history.filter((h) => h.code !== r.code);
         history.unshift({ code: r.code, found: r.found });
         if (history.length > 15) history.length = 15;
-        try { localStorage.setItem(HIST_KEY, JSON.stringify(history)); } catch (e) {}
+        try {
+          localStorage.setItem(HIST_KEY, JSON.stringify(history));
+        } catch (e) {}
         renderHistory();
       }
 
       // ================= events =================
-      $("btn-search").addEventListener("click", () => doSearch($("code").value));
-      $("code").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); doSearch($("code").value); } });
+      $("btn-search").addEventListener("click", () =>
+        doSearch($("code").value),
+      );
+      $("code").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          doSearch($("code").value);
+        }
+      });
       let pickPending = false;
-      $("btn-pick").addEventListener("click", () => { pickPending = true; diag("แตะปุ่มเลือกไฟล์"); });
-      $("f-link").addEventListener("cancel", () => { pickPending = false; diag("ตัวเลือกไฟล์ถูกปิด (ยกเลิก / ไม่ได้เลือก)"); });
+      $("btn-pick").addEventListener("click", () => {
+        pickPending = true;
+        diag("แตะปุ่มเลือกไฟล์");
+      });
+      $("f-link").addEventListener("cancel", () => {
+        pickPending = false;
+        diag("ตัวเลือกไฟล์ถูกปิด (ยกเลิก / ไม่ได้เลือก)");
+      });
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible" && pickPending)
-          setTimeout(() => { if (pickPending) diag("กลับมาที่แอปแล้ว แต่ยังไม่ได้รับไฟล์ (ถ้าเลือกไฟล์ไปแล้ว อาจกำลังดาวน์โหลดจาก OneDrive)"); }, 1500);
+          setTimeout(() => {
+            if (pickPending)
+              diag(
+                "กลับมาที่แอปแล้ว แต่ยังไม่ได้รับไฟล์ (ถ้าเลือกไฟล์ไปแล้ว อาจกำลังดาวน์โหลดจาก OneDrive)",
+              );
+          }, 1500);
       });
       $("f-link").addEventListener("change", async (e) => {
         pickPending = false;
@@ -1032,21 +2255,54 @@
           const n = input.files ? input.files.length : -1;
           diag("ได้รับเหตุการณ์ change: จำนวนไฟล์ = " + n);
           const f = n > 0 ? input.files[0] : null;
-          if (!f) { setStatus("setup-status", "⚠ ไม่ได้รับไฟล์จากตัวเลือกไฟล์ — ลองเลือกใหม่ หรือดาวน์โหลดไฟล์ลงเครื่อง (แอป Files → On My iPhone) แล้วเลือกจากตรงนั้น", "warn"); return; }
+          if (!f) {
+            setStatus(
+              "setup-status",
+              "⚠ ไม่ได้รับไฟล์จากตัวเลือกไฟล์ — ลองเลือกใหม่ หรือดาวน์โหลดไฟล์ลงเครื่อง (แอป Files → On My iPhone) แล้วเลือกจากตรงนั้น",
+              "warn",
+            );
+            return;
+          }
           await importFile(f);
         } catch (err) {
-          diag("❌ ขั้นเลือกไฟล์: " + (err && err.name) + " " + (err && err.message) + (err && err.stack ? "\n" + String(err.stack).split("\n").slice(0, 4).join("\n") : ""));
-          setStatus("setup-status", "❌ เลือกไฟล์ไม่สำเร็จ: " + (err && err.message), "bad");
+          diag(
+            "❌ ขั้นเลือกไฟล์: " +
+              (err && err.name) +
+              " " +
+              (err && err.message) +
+              (err && err.stack
+                ? "\n" + String(err.stack).split("\n").slice(0, 4).join("\n")
+                : ""),
+          );
+          setStatus(
+            "setup-status",
+            "❌ เลือกไฟล์ไม่สำเร็จ: " + (err && err.message),
+            "bad",
+          );
         } finally {
-          try { input.value = ""; } catch (x) {} // เคลียร์หลังอ่านเสร็จ เพื่อให้เลือกไฟล์ชื่อเดิมซ้ำได้
+          try {
+            input.value = "";
+          } catch (x) {} // เคลียร์หลังอ่านเสร็จ เพื่อให้เลือกไฟล์ชื่อเดิมซ้ำได้
         }
       });
-      $("btn-settings").addEventListener("click", () => ($("setup").classList.contains("hidden") ? goSetup() : (state.maps && goSearch())));
+      $("btn-settings").addEventListener("click", () =>
+        $("setup").classList.contains("hidden")
+          ? goSetup()
+          : state.maps && goSearch(),
+      );
       $("btn-close-setup").addEventListener("click", goSearch);
       $("btn-clear").addEventListener("click", async () => {
-        if (!confirm("ลบข้อมูลไฟล์ลิงก์ที่เก็บไว้ในเครื่องนี้? (ต้องเลือกไฟล์ใหม่ก่อนจึงจะค้นได้)")) return;
-        try { await dbClear(); } catch (e) {}
-        state.maps = null; state.meta = null;
+        if (
+          !confirm(
+            "ลบข้อมูลไฟล์ลิงก์ที่เก็บไว้ในเครื่องนี้? (ต้องเลือกไฟล์ใหม่ก่อนจึงจะค้นได้)",
+          )
+        )
+          return;
+        try {
+          await dbClear();
+        } catch (e) {}
+        state.maps = null;
+        state.meta = null;
         $("btn-pick").textContent = "📄 เลือกไฟล์ลิงก์ (.xlsx)";
         $("setup-title").textContent = "📄 เริ่มใช้งาน: เลือกไฟล์ลิงก์รูป";
         goSetup();
@@ -1056,68 +2312,132 @@
       $("btn-sync").addEventListener("click", () => syncMaster(true));
       // กลับมาเปิดแอปที่ค้างไว้ (iOS/Android ไม่ได้โหลดหน้าใหม่) -> ตรวจอัปเดตถ้าห่างจากครั้งก่อนเกิน 30 นาที
       document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState !== "visible" || location.hash.startsWith("#view=")) return;
+        if (
+          document.visibilityState !== "visible" ||
+          location.hash.startsWith("#view=")
+        )
+          return;
         const last = (state.meta && state.meta.lastCheck) || 0;
         if (Date.now() - last > 30 * 60 * 1000) syncMaster(false);
       });
-      window.addEventListener("online", () => { if (!state.maps) syncMaster(false); });
+      window.addEventListener("online", () => {
+        if (!state.maps) syncMaster(false);
+      });
 
       $("btn-copy-diag").addEventListener("click", async () => {
         const txt = $("diag").textContent;
-        try { await navigator.clipboard.writeText(txt); toast("📋 คัดลอกแล้ว"); }
-        catch (e) { const r = document.createRange(); r.selectNodeContents($("diag")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("เลือกข้อความแล้ว กดค้างเพื่อคัดลอก"); }
+        try {
+          await navigator.clipboard.writeText(txt);
+          toast("📋 คัดลอกแล้ว");
+        } catch (e) {
+          const r = document.createRange();
+          r.selectNodeContents($("diag"));
+          const s = getSelection();
+          s.removeAllRanges();
+          s.addRange(r);
+          toast("เลือกข้อความแล้ว กดค้างเพื่อคัดลอก");
+        }
       });
 
       // ---- ติดตั้งแอป ----
       let deferredPrompt = null;
-      window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; show("btn-install", true); }); // Android/Chrome/Edge
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        show("btn-install", true);
+      }); // Android/Chrome/Edge
       $("btn-install").addEventListener("click", async () => {
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
-        try { await deferredPrompt.userChoice; } catch (e) {}
-        deferredPrompt = null; show("btn-install", false);
+        try {
+          await deferredPrompt.userChoice;
+        } catch (e) {}
+        deferredPrompt = null;
+        show("btn-install", false);
       });
-      window.addEventListener("appinstalled", () => { show("btn-install", false); toast("✅ ติดตั้งแอปแล้ว เปิดจากไอคอนบนหน้าโฮมได้เลย", 3500); });
+      window.addEventListener("appinstalled", () => {
+        show("btn-install", false);
+        toast("✅ ติดตั้งแอปแล้ว เปิดจากไอคอนบนหน้าโฮมได้เลย", 3500);
+      });
       try {
-        if (isIOS && !isStandalone && localStorage.getItem("iosInstallClosed") !== "1") show("ios-install", true);
-      } catch (e) { if (isIOS && !isStandalone) show("ios-install", true); }
-      $("ios-install-close").addEventListener("click", () => { show("ios-install", false); try { localStorage.setItem("iosInstallClosed", "1"); } catch (e) {} });
+        if (
+          isIOS &&
+          !isStandalone &&
+          localStorage.getItem("iosInstallClosed") !== "1"
+        )
+          show("ios-install", true);
+      } catch (e) {
+        if (isIOS && !isStandalone) show("ios-install", true);
+      }
+      $("ios-install-close").addEventListener("click", () => {
+        show("ios-install", false);
+        try {
+          localStorage.setItem("iosInstallClosed", "1");
+        } catch (e) {}
+      });
 
       // ---- service worker (ใช้ออฟไลน์ + อัปเดตเวอร์ชัน) ----
       if ("serviceWorker" in navigator && location.protocol === "https:") {
-        navigator.serviceWorker.register("sw.js").then((reg) => {
-          reg.addEventListener("updatefound", () => {
-            const nw = reg.installing;
-            nw && nw.addEventListener("statechange", () => {
-              if (nw.state === "installed" && navigator.serviceWorker.controller) toast("🔄 มีแอปเวอร์ชันใหม่ — ปิดแล้วเปิดแอปใหม่เพื่ออัปเดต", 5000);
+        navigator.serviceWorker
+          .register("sw.js")
+          .then((reg) => {
+            reg.addEventListener("updatefound", () => {
+              const nw = reg.installing;
+              nw &&
+                nw.addEventListener("statechange", () => {
+                  if (
+                    nw.state === "installed" &&
+                    navigator.serviceWorker.controller
+                  )
+                    toast(
+                      "🔄 มีแอปเวอร์ชันใหม่ — ปิดแล้วเปิดแอปใหม่เพื่ออัปเดต",
+                      5000,
+                    );
+                });
             });
-          });
-        }).catch((e) => console.warn("SW", e));
+          })
+          .catch((e) => console.warn("SW", e));
       }
 
       // ================= เริ่มต้น =================
       (async () => {
-        if (location.hash.startsWith("#view=")) { renderViewer(); return; }
+        if (location.hash.startsWith("#view=")) {
+          renderViewer();
+          return;
+        }
         renderDiag();
         diag("เปิดแอป");
         setSearchEnabled(false);
         if (typeof PicCore === "undefined") {
-          $("unsupported").textContent = "❌ โหลดส่วนอ่านไฟล์ (core) ไม่ได้ — ไฟล์แอปไม่ครบ";
-          show("unsupported", true); goSetup(); return;
+          $("unsupported").textContent =
+            "❌ โหลดส่วนอ่านไฟล์ (core) ไม่ได้ — ไฟล์แอปไม่ครบ";
+          show("unsupported", true);
+          goSetup();
+          return;
         }
         if (location.protocol === "file:" || location.protocol === "content:") {
-          $("unsupported").innerHTML = "⚠ เปิดจากไฟล์ในเครื่อง — ใช้ทดสอบได้ แต่<b>ติดตั้งเป็นแอปไม่ได้</b> ต้องเปิดจากลิงก์เว็บ (https) ที่ฝากไฟล์แอปไว้";
+          $("unsupported").innerHTML =
+            "⚠ เปิดจากไฟล์ในเครื่อง — ใช้ทดสอบได้ แต่<b>ติดตั้งเป็นแอปไม่ได้</b> ต้องเปิดจากลิงก์เว็บ (https) ที่ฝากไฟล์แอปไว้";
           show("unsupported", true);
         }
         if (!PicCore.supportsNativeUnzip()) {
-          $("unsupported").innerHTML = "❌ เบราว์เซอร์/ระบบนี้เก่าเกินไป อ่านไฟล์ .xlsx ไม่ได้ — ต้องเป็น <b>iOS 16.4 ขึ้นไป</b> หรือ <b>Chrome 103 ขึ้นไป</b>";
+          $("unsupported").innerHTML =
+            "❌ เบราว์เซอร์/ระบบนี้เก่าเกินไป อ่านไฟล์ .xlsx ไม่ได้ — ต้องเป็น <b>iOS 16.4 ขึ้นไป</b> หรือ <b>Chrome 103 ขึ้นไป</b>";
           show("unsupported", true);
         }
         renderHistory();
         setStatus("setup-status", "");
         if (await loadStored()) {
-          renderMeta(); goSearch();
-          setStatus("search-status", "ข้อมูลไฟล์ลิงก์: " + state.meta.fileName + " (" + fmtDate(state.meta.fileModified || state.meta.savedAt) + ")");
+          renderMeta();
+          goSearch();
+          setStatus(
+            "search-status",
+            "ข้อมูลไฟล์ลิงก์: " +
+              state.meta.fileName +
+              " (" +
+              fmtDate(state.meta.fileModified || state.meta.savedAt) +
+              ")",
+          );
         } else {
           goSetup();
         }
