@@ -29,6 +29,7 @@
     />
     <!--
       PicSearch App v2.2 (PWA) - แยกจาก PicSearch v1.7
+      v2.10 (19 ต.ค. 2569): เปลี่ยนคำเรียกบนหน้าจอจาก "คอลัมน์ A / C" เป็น "Amos / PDM" (ป้ายผลค้นหา, รายละเอียดการค้น, จำนวนรหัสในเมนูไฟล์ลิงก์) ; ข้อความ "ไม่พบรหัสสินค้านี้ทั้ง Amos และ PDM" แก้โดยผู้พัฒนา
       v2.9 (19 ต.ค. 2569): ประวัติการค้น (รหัสที่จำไว้) ล้างอัตโนมัติทุกวันใหม่ — เก็บ {day, items} ใน localStorage, เช็กวันเมื่อเปิด/กลับมาที่แอป/ก่อนบันทึก
       v2.8: แก้ป้ายอีเมลผู้พัฒนาที่แถบบนถูกตัดคำเมื่อปุ่มติดตั้งแสดง (Android) — ไม่ตัดบรรทัด, ปุ่มด้านขวาเรียงแนวตั้ง
       v2.7: โหลดไฟล์มาสเตอร์ link.xlsx จากระบบอัตโนมัติ ตรวจ ETag ทุกครั้งที่เปิดแอป ดาวน์โหลดเฉพาะเมื่อไฟล์เปลี่ยน, เลือกไฟล์เองเป็นทางสำรอง
@@ -497,7 +498,7 @@
       <div>
         <div class="title">🔍 ค้นรูปสินค้า</div>
         <div class="badge" id="dev-badge">
-          v2.9 (Suwanneepatt@24shopping.co.th)
+          v2.10 (Suwanneepatt@24shopping.co.th)
         </div>
       </div>
       <div class="row">
@@ -621,7 +622,7 @@
         </button>
       </details>
       <div class="ver" id="ver">
-        ค้นรูปสินค้า v2.9 • ผู้พัฒนา: SUWANNEE PATTISITIWONG
+        ค้นรูปสินค้า v2.10 • ผู้พัฒนา: SUWANNEE PATTISITIWONG
         (Suwanneepatt@24shopping.co.th)
       </div>
     </div>
@@ -1045,7 +1046,9 @@
     </script>
     <script>
       "use strict";
-      const APP_VERSION = "2.9";
+      const APP_VERSION = "2.10";
+      // v2.10: ชื่อเรียกรหัสบนหน้าจอ — คอลัมน์ A = รหัส Amos, คอลัมน์ C = รหัส PDM
+      const COL_NAME = { A: "Amos", C: "PDM" };
       const $ = (id) => document.getElementById(id);
       const show = (el, on) => $(el).classList.toggle("hidden", !on);
       function setStatus(id, text, cls) {
@@ -1223,9 +1226,9 @@
         add("ไฟล์", m.fileName + " [" + m.sheetName + "]");
         add(
           "รหัส",
-          "คอลัมน์ A " +
+          "Amos " +
             m.countA.toLocaleString() +
-            " / คอลัมน์ C " +
+            " / PDM " +
             m.countC.toLocaleString(),
         );
         if (m.fileModified)
@@ -1698,13 +1701,14 @@
           if (hit.col === "C")
             steps.push([
               "",
-              "คอลัมน์ A: ไม่พบ " + keysA + " → ค้นคอลัมน์ C ต่อ",
+              "Amos (คอลัมน์ A): ไม่พบ " + keysA + " → ค้น PDM ต่อ",
             ]);
           steps.push([
             "g",
-            "คอลัมน์ " +
+            COL_NAME[hit.col] +
+              " (คอลัมน์ " +
               hit.col +
-              ": พบ " +
+              "): พบ " +
               hit.key +
               " → ใช้ลิงก์คอลัมน์ B (" +
               hit.images.length +
@@ -1719,10 +1723,10 @@
               : "ชื่อสินค้า: คอลัมน์ E และ D ว่าง",
           ]);
         } else {
-          steps.push(["w", "คอลัมน์ A: ไม่พบ " + keysA]);
+          steps.push(["w", "Amos (คอลัมน์ A): ไม่พบ " + keysA]);
           steps.push([
             "w",
-            "คอลัมน์ C: ไม่พบ " +
+            "PDM (คอลัมน์ C): ไม่พบ " +
               keysC +
               " (หรือพบแต่คอลัมน์ B ว่าง) → ไม่พบรูป",
           ]);
@@ -1985,7 +1989,7 @@
         head.className = "result-head";
         const src = document.createElement("span");
         src.className = "src " + (r.found ? "found" : "none");
-        src.textContent = r.found ? "✅ พบในคอลัมน์ " + r.col : "❌ ไม่พบรูป";
+        src.textContent = r.found ? "✅ พบใน " + COL_NAME[r.col] : "❌ ไม่พบรูป";
         const codeEl = document.createElement("div");
         codeEl.style.cssText = "font-family:var(--mono);font-weight:700";
         codeEl.textContent = r.code;
@@ -2087,7 +2091,7 @@
         } else {
           const e = document.createElement("div");
           e.className = "result-empty";
-          e.textContent = "ไม่พบรหัสนี้ทั้งคอลัมน์ A และ C ในไฟล์ลิงก์";
+          e.textContent = "ไม่พบรหัสสินค้านี้ทั้ง Amos และ PDM ในไฟล์ลิงก์";
           box.appendChild(e);
         }
 
@@ -2195,20 +2199,35 @@
       const HIST_KEY = "picSearchHistory";
       function todayKey() {
         const d = new Date();
-        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+        return (
+          d.getFullYear() +
+          "-" +
+          String(d.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(d.getDate()).padStart(2, "0")
+        );
       }
       let historyDay = todayKey();
       let history = [];
       try {
         const saved = JSON.parse(localStorage.getItem(HIST_KEY) || "null");
-        if (saved && !Array.isArray(saved) && saved.day === historyDay && Array.isArray(saved.items)) history = saved.items;
+        if (
+          saved &&
+          !Array.isArray(saved) &&
+          saved.day === historyDay &&
+          Array.isArray(saved.items)
+        )
+          history = saved.items;
         else localStorage.removeItem(HIST_KEY);
       } catch (e) {
         history = [];
       }
       function saveHistory() {
         try {
-          localStorage.setItem(HIST_KEY, JSON.stringify({ day: historyDay, items: history }));
+          localStorage.setItem(
+            HIST_KEY,
+            JSON.stringify({ day: historyDay, items: history }),
+          );
         } catch (e) {}
       }
       // แอปเปิดค้างข้ามเที่ยงคืน: เช็กทุกครั้งที่กลับมาเปิดแอป และก่อนบันทึกรหัสใหม่
@@ -2217,7 +2236,9 @@
         if (t === historyDay) return false;
         historyDay = t;
         history = [];
-        try { localStorage.removeItem(HIST_KEY); } catch (e) {}
+        try {
+          localStorage.removeItem(HIST_KEY);
+        } catch (e) {}
         renderHistory();
         return true;
       }
